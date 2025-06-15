@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= user.name %></title>
+</head>
+<body>
+  <h1 id="name" contenteditable="true"><%= user.name %></h1>
+  <p id="bio" contenteditable="true"><%= user.bio %></p>
+  <button onclick="save()">save</button><br>
+  <a href=".">back</a><br>
+  <a href="/">search</a>
+  <p id="msg"></p>
+<script>
+let ogname = '<%= user.name %>';
+let ogbio = '<%= user.bio %>';
+let name = '<%= user.name %>';
+let bio = '<%= user.bio %>';
+
+function save() {
+  name = document.getElementById('name').textContent;
+  bio = document.getElementById('bio').textContent;
+  if (name===ogname&&bio===ogbio) {
+    document.getElementById('msg').style.color = '#00F';
+    document.getElementById('msg').textContent = 'no edits!';
+    return;
+  };
+  if (name!=ogname) {
+    edit("name",name);
+  };
+  if (bio!=ogbio) {
+    edit("bio",bio);
+  };
+};
+
+function edit(type,value) {
+  fetch(`/api/edit/user/${type}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(
+      {
+        [type]: value,
+      }
+    ),
+  })
+  .then(r=>r.json())
+  .then(a=>{
+    if (a.success) {
+      document.getElementById('msg').style.color = '#0F0';
+      document.getElementById('msg').textContent = 'success!';
+      eval(`og${type} = value`);
+    } else {
+      document.getElementById('msg').style.color = '#F00';
+      document.getElementById('msg').textContent = 'error';
+      return { success: false };
+    }
+  });
+};
+</script>
+</body>
+</html>

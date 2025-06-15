@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= name %></title>
+  <style>
+  #tagger {
+    min-width: 50px;
+    field-sizing: content;
+  }  
+  </style>
+</head>
+<body>
+  <h1 id="name" contenteditable="true"><%= name %></h1>
+  <span id="tags">
+    <% tags.forEach(tag => { %><span class="tag"><%= tag.name %></span><% }) %><input id='tagger' type="text" placeholder="add tag" onkeydown="tagInput(event)">
+  </span><br>
+  <p id="desc" contenteditable="true"><%= desc %></p>
+  <button onclick="save()">save</button><br>
+  <a href=".">back</a><br>
+  <a href="/">search</a>
+  <p id="msg"></p>
+<script src="/js/tags.js"></script>
+<script>
+let ogname = '<%= name %>';
+let ogdesc = '<%= desc %>';
+let ogtags = getTags();
+let name = '<%= name %>';
+let desc = '<%= desc %>';
+let tags = getTags();
+
+function checkTags() {
+  return JSON.stringify(tags) === JSON.stringify(ogtags);
+};
+
+function save() {
+  name = document.getElementById('name').textContent;
+  desc = document.getElementById('desc').textContent;
+  tags = getTags();
+  if (name===ogname&&desc===ogdesc&&checkTags()) {
+    document.getElementById('msg').style.color = '#00F';
+    document.getElementById('msg').textContent = 'no edits!';
+    return;
+  };
+  if (name!=ogname) {
+    edit("name",name);
+  };
+  if (desc!=ogdesc) {
+    edit("desc",desc);
+  };
+  if (!checkTags()) {
+    edit("tags",tags);
+  };
+};
+
+function edit(type,value) {
+  fetch(`/api/edit/item/${type}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(
+      {
+        item: '<%= id  %>',
+        [type]: value,
+      }
+    ),
+  })
+  .then(r=>r.json())
+  .then(a=>{
+    if (a.success) {
+      document.getElementById('msg').style.color = '#0F0';
+      document.getElementById('msg').textContent = 'success!';
+      eval(`og${type} = value`);
+    } else {
+      document.getElementById('msg').style.color = '#F00';
+      document.getElementById('msg').textContent = 'error';
+      return { success: false };
+    }
+  });
+};
+</script>
+</body>
+</html>

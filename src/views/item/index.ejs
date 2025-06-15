@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= name %></title>
+</head>
+<body>
+  <h1><%= name %></h1>
+  <span><button onclick="vote('<%= id %>', 1, 'item', 'voteText')">upvote</button>/<button onclick="vote('<%= id %>', 0, 'item', 'voteText')">downvote</button></span>
+  <span><%= votes.upvotes - votes.downvotes %></span>
+	<p id="voteText"></p>
+  <span class="tags">
+    <% tags.forEach(tag => { %>
+      <span id='<%= tag.id %>' class="tag">
+        <a href="/list/<%= tag.name %>/"><%= tag.name %></a>
+        <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 1, 'tag', 'vote-<%= tag.id %>')">↑</a>
+        <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 0, 'tag', 'vote-<%= tag.id %>')">↓</a>
+        <span id="vote-<%= tag.id %>"></span>
+      </span>
+    <% }) %> - <a href="tags">all</a></span>
+  </span>
+	<p><%= desc %></p>
+	<a href="/item/<%= name %>/edit">edit</a><br>
+	<a href="/">search</a><br>
+<script src="/js/vote.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body>
+  <p>Login</p>
+  <a href="/auth/discord">discord</a><br>
+  <p>or:</p>
+  <input type="text" id="name" placeholder="name"><br>
+  <input type="password" id="pass" placeholder="password"><br>
+  <button onclick="login();">Login</button>
+  <p id="msg"></p>
+
+<script>
+function login() {
+  let name = document.getElementById('name').value;
+  let pass = document.getElementById('pass').value;
+
+  fetch('/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ name, pass }),
+  })
+  .then(r => r.json())
+  .then(a => {
+    if (a.id && a.name) {
+      document.getElementById('msg').style.color = '#0F0';
+      document.getElementById('msg').textContent = 'Logged in!';
+      window.location.href = '/';
+    } else {
+      document.getElementById('msg').style.color = '#F00';
+      document.getElementById('msg').textContent = a.error || 'error';
+    }
+  });
+}
+</script>
+</body>
+</html>
