@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= user.name %></title>
+</head>
+<body>
+  <h1><%= user.name %></h1>
+  <span><button onclick="vote('<%= user.id %>', 1, 'user', 'voteText')">upvote</button>/<button onclick="vote('<%= user.id %>', 0, 'user', 'voteText')">downvote</button></span>
+	<p id="voteText"></p>
+	<p><%= user.bio %></p>
+	<a href="/user/<%= user.name %>/edit">edit</a><br>
+	<a href="/">home</a><br>
+<script src="/js/vote.js"></script>
+</body>
+</html>

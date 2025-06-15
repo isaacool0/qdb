@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+</head>
+<body>
+  <p>Register</p>
+  <a href="/auth/discord">discord</a><br>
+  <p>or:</p>
+  <input type="text" id="name" placeholder="name"><br>
+  <input type="password" id="pass" placeholder="password"><br>
+  <button onclick="createUser();">Create</button>
+  <p id="msg"></p>
+<script>
+function createUser() {
+  let name = document.getElementById('name').value;
+  let pass = document.getElementById('pass').value;
+  fetch('/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(
+      {
+        name: name, 
+        pass: pass,
+      }    
+    ),
+  })
+  .then(r=>r.json())
+  .then(a=>{
+    if (a.success) {
+      document.getElementById('msg').style.color = '#0F0';
+      document.getElementById('msg').textContent = 'success!';
+    } else if (a.nameExists) {
+      document.getElementById('msg').style.color = '#F00';
+      document.getElementById('msg').textContent = 'Username taken';
+    } else {
+      document.getElementById('msg').style.color = '#F00';
+      document.getElementById('msg').textContent = 'error';
+    }
+  })
+}
+
+/*
+function msg(txt, c) {
+  document.getElementById('msg').style.color = c;
+  document.getElementById('msg').textContent = txt;
+}
+*/
+</script>
+</body>
+</html>

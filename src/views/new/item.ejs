@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Item</title>
+	<style>
+  input, textarea {
+    min-height: 15px;
+    min-width: 200px;
+    field-sizing: content;
+    resize: none;
+  }
+	</style>
+</head>
+<body>
+  <p>New Item</p>
+  <input type="text" id="name" placeholder="name"><br>
+  <textarea id="desc" placeholder="description"></textarea><br>
+  <span id="tags">
+    <input type="text" placeholder="tags" onkeydown="tagInput(event)">
+  </span><br>
+  <button onclick="addItem();">Create</button>
+  <p id="msg"></p>
+<script src="/js/tags.js"></script>
+<script>
+let msg = document.getElementById('msg');
+function addItem() {
+  let name = document.getElementById('name').value;
+  let desc = document.getElementById('desc').value;
+  let tags = getTags();
+	fetch('/api/add/item', {
+	  method: 'POST',
+	  headers: {
+	    'Content-Type': 'application/json',
+	  },
+	  body: JSON.stringify(
+	    {
+	      name: name, 
+	      desc: desc,
+	      tags: tags
+	    }    
+	  ),
+	})
+	.then(r=>r.json())
+	.then(a=>{
+		if (a.success) {
+			msg.style.color = '#0F0';
+			msg.innerHTML = `success!<br><a href="/item/${name}">view item</a>`;
+		} else if (a.nameExists) {
+			msg.style.color = '#F00';
+			msg.textContent = 'item name is in use';
+		} else {
+			msg.style.color = '#0F0';
+			msg.textContent = 'error';
+		}
+	});
+};
+
+window.onload = () => {
+  let p = new URLSearchParams(location.search);
+  let name = p.get('name');
+  let desc = p.get('desc');
+  let tags = p.get('tags')?.split(':');
+  if (name) document.getElementById('name').value = name;
+  if (desc) document.getElementById('desc').value = desc;
+  if (tags) {
+    let a = { target: document.querySelector('#tags input') };
+    tags.forEach(tag => { addTag(tag,a) });
+  } 
+};
+</script>
+</body>
+</html>

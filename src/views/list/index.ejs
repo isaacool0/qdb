@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results</title>
+</head>
+<body>
+  <h1>Search Results</h1>
+	<p>Tags: <% tags.forEach(tag => { %><a href='/list/<%= tag.name %>'><%= tag.name %></a> <% }) %></p>
+  <p>Items:</p>
+    <ul>
+    <% items.forEach(item => { %>
+      <li id='<%= item.id %>'><a href="/item/<%= item.name %>"><%= item.name %></a>
+			<button onclick="vote(['<%= item.id %>', '<%= tags.map(tag => tag.id) %>'], 1, 'tag', 'vote-<%= item.id %>' )">↑</button>
+			<button onclick="vote(['<%= item.id %>', '<%= tags.map(tag => tag.id) %>'], 0, 'tag', 'vote-<%= item.id %>' )">↓</button>
+      <span><%= item.upvotes - item.downvotes %></span>
+			<span id="vote-<%= item.id %>"></span></li>
+    <% }) %>
+  </ul>
+  <a href="/">search</a>
+
+<script src="/js/vote.js"></script>
+</body>
+</html>
