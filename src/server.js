@@ -49,14 +49,16 @@ app.get('/list/:tags', async (req, res) => {
     AND item_tags.active = true`, tags)).rows[0];
   if (result.items?.length > 0) {
     for (let item of result.items) {
-      item.upvotes = 0;
-      item.downvotes = 0;
+      item.totalUpvotes = 0;
+      item.totalDownvotes = 0;
       for (let tag of result.tags) {
         let votes = await getVotes([item.id, tag.id], 'tag');
-        item.upvotes += parseInt(votes.upvotes);
-        item.downvotes += parseInt(votes.downvotes);
+        item.totalUpvotes += parseInt(votes.upvotes);
+        item.totalDownvotes += parseInt(votes.downvotes);
       }
-    }
+      item.upvotes = totalUpvotes / result.tags.length;
+      item.downvotes = totalDownvotes / result.tags.length;
+      }
 		res.render('list/index', { tags: result.tags, items: result.items});
   } else {
     res.render('list/no-results', { tags: tags });

@@ -13,10 +13,12 @@
   <a href="/">search</a>
   <p id="msg"></p>
 <script>
-let ogname = '<%= user.name %>';
-let ogbio = '<%= user.bio %>';
-let name = '<%= user.name %>';
-let bio = '<%= user.bio %>';
+
+
+let ogname = '<%= JSON.stringify(user.name) %>';
+let ogbio = '<%= JSON.stringify(user.bio) %>';
+let name = '<%= JSON.stringify(user.name) %>';
+let bio = '<%= JSON.stringify(user.bio) %>';
 
 function save() {
   name = document.getElementById('name').textContent;

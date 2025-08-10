@@ -23,11 +23,11 @@
   <p id="msg"></p>
 <script src="/js/tags.js"></script>
 <script>
-let ogname = '<%= name %>';
-let ogdesc = '<%= desc %>';
+let ogname = '<%= JSON.stringify(name) %>';
+let ogdesc = '<%= JSON.stringify(desc) %>';
 let ogtags = getTags();
-let name = '<%= name %>';
-let desc = '<%= desc %>';
+let name = '<%= JSON.stringify(name) %>';
+let desc = '<%= JSON.stringify(desc) %>';
 let tags = getTags();
 
 function checkTags() {
@@ -62,7 +62,7 @@ function edit(type,value) {
     },
     body: JSON.stringify(
       {
-        item: '<%= id  %>',
+        item: <%- JSON.stringify(id) %>,
         [type]: value,
       }
     ),
