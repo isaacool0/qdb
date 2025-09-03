@@ -56,8 +56,8 @@ app.get('/list/:tags', async (req, res) => {
         item.totalUpvotes += parseInt(votes.upvotes);
         item.totalDownvotes += parseInt(votes.downvotes);
       }
-      item.upvotes = totalUpvotes / result.tags.length;
-      item.downvotes = totalDownvotes / result.tags.length;
+      item.upvotes = item.totalUpvotes / result.tags.length;
+      item.downvotes = item.totalDownvotes / result.tags.length;
       }
 		res.render('list/index', { tags: result.tags, items: result.items});
   } else {
