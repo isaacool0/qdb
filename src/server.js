@@ -34,32 +34,15 @@ app.get('/test/:test', async (req, res) => {
   console.log(test);
 });
 
-app.get('/list/:tags', async (req, res) => {
-  if (!req.params.tags) return res.redirect(302, '/');
+app.get('/list/:tags/:mode', async (req, res) => {
+  if (!req.params.mode) return res.redirect(302, `/list/${tags.join(":")}/top`);
   let tags = req.params.tags ? req.params.tags.split(":") : [];
+  if (!req.params.tags) return res.redirect(302, '/');
   if (tags.length === 0) return res.redirect(302, '/');
-  let result = (await pool.query(`
-    SELECT
-      json_agg(DISTINCT jsonb_build_object('id', items.id, 'name', items.name)) AS items,
-      json_agg(DISTINCT jsonb_build_object('id', tags.id, 'name', tags.name)) AS tags
-    FROM tags
-    JOIN item_tags ON tags.id = item_tags.tag_id
-    JOIN items ON items.id = item_tags.item_id
-    WHERE tags.name IN (${tags.map((_,i)=>`$${i+1}`).join(", ")})
-    AND item_tags.active = true`, tags)).rows[0];
+  let result = await getResults(tags, req.params.mode, req.query.dir||'desc')
   if (result.items?.length > 0) {
-    for (let item of result.items) {
-      item.totalUpvotes = 0;
-      item.totalDownvotes = 0;
-      for (let tag of result.tags) {
-        let votes = await getVotes([item.id, tag.id], 'tag');
-        item.totalUpvotes += parseInt(votes.upvotes);
-        item.totalDownvotes += parseInt(votes.downvotes);
-      }
-      item.upvotes = item.totalUpvotes / result.tags.length;
-      item.downvotes = item.totalDownvotes / result.tags.length;
-      }
 		res.render('list/index', { tags: result.tags, items: result.items});
+		console.log(result);
   } else {
     res.render('list/no-results', { tags: tags });
   }
@@ -120,7 +103,7 @@ app.get('/get-votes/:object/:type', async (req, res) => {
   getVotes(req.params.object, req.params.type);
 });
 
-async function getVotes(object, type) {
+/*async function getVotes(object, type) {
 	let votes;
 	if (type==='tag') {
 	  votes = (await pool.query(`
@@ -138,10 +121,46 @@ async function getVotes(object, type) {
 	  WHERE ${type}_id = $1`, [object])).rows[0];
 	}
 	return votes;
-};
+};*/
 
+async function getResults(tags, mode=, dir) {
+  dir = dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  let order
+  switch (mode) {
+    case 'pop':
+      order = `(upvotes + downvotes) ${dir}`
+      break
+    case 'top':
+    default:
+      order = `rating ${dir}`
+  }
+  let sql = `
+    WITH sel_tags AS (
+      SELECT id, name FROM tags WHERE name = ANY($1::text[])
+    ),
+    item_stats AS (
+      SELECT
+        i.id,
+        i.name,
+        i.created_at,
+        COALESCE(SUM(CASE WHEN tv.rating THEN 1 ELSE 0 END)::float / GREATEST(COUNT(DISTINCT st.id),1),0) AS upvotes,
+        COALESCE(SUM(CASE WHEN NOT tv.rating THEN 1 ELSE 0 END)::float / GREATEST(COUNT(DISTINCT st.id),1),0) AS downvotes,
+        COALESCE(SUM(CASE WHEN tv.rating THEN 1 ELSE -1 END)::float / GREATEST(COUNT(DISTINCT st.id),1),0) AS rating
+      FROM items i
+      JOIN item_tags it ON it.item_id=i.id AND it.active=true
+      JOIN sel_tags st ON st.id=it.tag_id
+      LEFT JOIN tag_votes tv ON tv.item_id=i.id AND tv.tag_id=st.id
+      GROUP BY i.id,i.name,i.created_at
+    )
+    SELECT
+      (SELECT json_agg(jsonb_build_object(
+        'id',id,
+        'name',name,
+        'upvotes',upvotes,
+        'downvotes',downvotes,
+        'rating',rating
+      ) ORDER BY ${order}) FROM item_stats) AS items,
+      (SELECT json_agg(jsonb_build_object('id',id,'name',name)) FROM sel_tags) AS tags`
+  return (await pool.query(sql,[tags])).rows[0]
+}
 
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
