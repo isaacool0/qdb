@@ -14,7 +14,7 @@
 function search() {
    let input = document.getElementById("searchBox");
    let tags = input.value.trim().toLowerCase().replace(/[^a-z0-9\s-]/g,' ').replace(/\s+/g,':')
-   window.location.href = `/list/${tags}`;
+   window.location.href = `/list/${tags}/top`;
 }
 </script>
 </body>
