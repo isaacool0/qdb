@@ -9,21 +9,23 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE public.users (
     id TEXT DEFAULT b64url(encode(public.gen_random_bytes(8), 'base64')) NOT NULL UNIQUE,
     name TEXT NOT NULL UNIQUE,
-		bio TEXT,
+    bio TEXT,
+    avatar TEXT,
     pass TEXT,
     salt TEXT,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT users_avatar_fkey FOREIGN KEY (image) REFERENCES public.images(id) ON DELETE SET NULL
 );
 
 CREATE INDEX users_id_idx ON public.users(id);
 
 CREATE TABLE public.connections (
     user_id TEXT NOT NULL,
-		provider TEXT NOT NULL,
+  provider TEXT NOT NULL,
     external_id TEXT NOT NULL,
-		name TEXT NOT NULL,
-		PRIMARY KEY (user_id, provider, external_id),
+  name TEXT NOT NULL,
+  PRIMARY KEY (user_id, provider, external_id),
     CONSTRAINT connections_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
@@ -34,10 +36,12 @@ CREATE TABLE public.items (
     id TEXT DEFAULT b64url(encode(public.gen_random_bytes(8), 'base64')) NOT NULL UNIQUE,
     name TEXT NOT NULL UNIQUE,
     description TEXT,
-		updated_by TEXT NOT NULL,
+    image TEXT,  
+    updated_by TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    CONSTRAINT items_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id) ON DELETE SET NULL
+    CONSTRAINT items_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id) ON DELETE SET NULL,
+    CONSTRAINT items_image_fkey FOREIGN KEY (image) REFERENCES public.images(id) ON DELETE SET NULL
 );
 
 CREATE INDEX items_id_idx ON public.items(id);
@@ -70,7 +74,7 @@ CREATE INDEX comments_item_user_id_idx ON public.comments(item_id, user_id);
 CREATE TABLE public.item_tags (
     item_id TEXT NOT NULL,
     tag_id TEXT NOT NULL,
-		active BOOL DEFAULT true,
+    active BOOL DEFAULT true,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (item_id, tag_id),
     CONSTRAINT item_tags_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id) ON DELETE CASCADE,
@@ -86,9 +90,9 @@ CREATE TABLE public.item_votes (
     item_id TEXT NOT NULL,
     rating BOOL NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (user_id, item_id),
-		CONSTRAINT item_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
-		CONSTRAINT item_votes_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id) ON DELETE CASCADE
+  PRIMARY KEY (user_id, item_id),
+  CONSTRAINT item_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
+  CONSTRAINT item_votes_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id) ON DELETE CASCADE
 );
 
 CREATE INDEX item_votes_user_id_idx ON public.item_votes(user_id);
@@ -100,10 +104,10 @@ CREATE TABLE public.tag_votes (
     tag_id TEXT NOT NULL,
     rating BOOL NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (user_id, item_id, tag_id),
-		CONSTRAINT tag_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
-		CONSTRAINT tag_votes_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id) ON DELETE CASCADE,
-		CONSTRAINT tag_votes_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE
+    PRIMARY KEY (user_id, item_id, tag_id),
+  CONSTRAINT tag_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
+  CONSTRAINT tag_votes_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id) ON DELETE CASCADE,
+  CONSTRAINT tag_votes_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE
 );
 
 CREATE INDEX tag_votes_user_id_idx ON public.tag_votes(user_id);
@@ -115,8 +119,8 @@ CREATE TABLE public.comment_votes (
     rating BOOL NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, comment_id),
-		CONSTRAINT comment_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
-		CONSTRAINT comment_votes_comment_id_fkey FOREIGN KEY (comment_id) REFERENCES public.comments(id) ON DELETE CASCADE
+  CONSTRAINT comment_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
+  CONSTRAINT comment_votes_comment_id_fkey FOREIGN KEY (comment_id) REFERENCES public.comments(id) ON DELETE CASCADE
 );
 
 CREATE INDEX comment_votes_user_id_idx ON public.comment_votes(user_id);
@@ -127,9 +131,9 @@ CREATE TABLE public.profile_votes (
     profile_id TEXT NOT NULL,
     rating BOOL NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (user_id, profile_id),
-		CONSTRAINT profile_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
-		CONSTRAINT profile_votes_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.users(id) ON DELETE CASCADE
+  PRIMARY KEY (user_id, profile_id),
+  CONSTRAINT profile_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
+  CONSTRAINT profile_votes_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX profile_votes_user_id_idx ON public.profile_votes(user_id);
@@ -147,15 +151,26 @@ CREATE INDEX redirects_from_name_idx ON public.redirects(from_name);
 CREATE INDEX redirects_to_name_idx ON public.redirects(to_name);
 CREATE INDEX redirects_redirect_type_idx ON public.redirects(redirect_type);
 
+CREATE TABLE public.images (
+    id TEXT NOT NULL UNIQUE, 
+    file_path TEXT NOT NULL,
+    uploaded_by TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT images_uploader_fkey FOREIGN KEY (uploaded_by) REFERENCES public.users(id) ON DELETE RESTRICT
+);
+
+CREATE INDEX images_uploader_idx ON public.images(uploaded_by);
+
 CREATE TABLE public.edits (
     id TEXT, 
     object_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
     edit_type CHAR(3) NOT NULL,
-		content TEXT NOT NULL,
+  content TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     PRIMARY KEY (id),
-		CONSTRAINT edits_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
+  CONSTRAINT edits_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX edits_id_idx ON public.edits(id);
@@ -170,63 +185,91 @@ CREATE FUNCTION gen_edit_id(object_id TEXT, edit_type CHAR(3)) RETURNS TEXT AS $
 
 CREATE FUNCTION create_item_edits() RETURNS TRIGGER AS $$
 BEGIN
-		INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-		VALUES (gen_edit_id(NEW.id, 'ITM'), NEW.id, NEW.updated_by, 'ITM', NEW.name, now());
-		IF NEW.description IS NOT NULL THEN
-			INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-			VALUES (gen_edit_id(NEW.id, 'DSC'), NEW.id, NEW.updated_by, 'DSC', NEW.description, now());
-		END IF;
-		RETURN NEW;
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'ITM'), NEW.id, NEW.updated_by, 'ITM', NEW.name, now());
+    IF NEW.description IS NOT NULL THEN
+      INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+      VALUES (gen_edit_id(NEW.id, 'DSC'), NEW.id, NEW.updated_by, 'DSC', NEW.description, now());
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER create_item_edits_trigger AFTER INSERT ON public.items FOR EACH ROW EXECUTE FUNCTION create_item_edits();
 
 CREATE FUNCTION edit_item_name() RETURNS TRIGGER AS $$
 BEGIN
-		INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-		VALUES (gen_edit_id(NEW.id, 'ITM'), NEW.id, NEW.updated_by, 'ITM', NEW.name, now());
-		RETURN NEW;
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'ITM'), NEW.id, NEW.updated_by, 'ITM', NEW.name, now());
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER edit_item_name_trigger AFTER UPDATE ON public.items FOR EACH ROW WHEN (OLD.name IS DISTINCT FROM NEW.name) EXECUTE FUNCTION edit_item_name();
 
 CREATE FUNCTION edit_item_desc() RETURNS TRIGGER AS $$
 BEGIN
-		INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-		VALUES (gen_edit_id(NEW.id, 'DSC'), NEW.id, NEW.updated_by, 'DSC', NEW.description, now());
-		RETURN NEW;
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'DSC'), NEW.id, NEW.updated_by, 'DSC', NEW.description, now());
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER edit_item_desc_trigger AFTER UPDATE ON public.items FOR EACH ROW WHEN (OLD.description IS DISTINCT FROM NEW.description) EXECUTE FUNCTION edit_item_desc();
 
+CREATE FUNCTION edit_item_image() RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'IMG'), NEW.id, NEW.updated_by, 'IMG', NEW.image, now());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER edit_item_image_trigger AFTER UPDATE ON public.items FOR EACH ROW WHEN (OLD.image IS DISTINCT FROM NEW.image) EXECUTE FUNCTION edit_item_image();
+
+
 --- USER EDITS
 CREATE FUNCTION create_user_edits() RETURNS TRIGGER AS $$
 BEGIN
-		INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-		VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.name, now());
-		IF NEW.bio IS NOT NULL THEN
-			INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-			VALUES (gen_edit_id(NEW.id, 'BIO'), NEW.id, NEW.id, 'BIO', NEW.bio, now());
-		END IF;
-		RETURN NEW;
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.name, now());
+    IF NEW.bio IS NOT NULL THEN
+      INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+      VALUES (gen_edit_id(NEW.id, 'BIO'), NEW.id, NEW.id, 'BIO', NEW.bio, now());
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER create_user_edits_trigger AFTER INSERT ON public.users FOR EACH ROW EXECUTE FUNCTION create_user_edits();
 
 CREATE FUNCTION edit_user_name() RETURNS TRIGGER AS $$
 BEGIN
-		INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-		VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.name, now());
-		RETURN NEW;
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.name, now());
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER edit_user_name_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.name IS DISTINCT FROM NEW.name) EXECUTE FUNCTION edit_user_name();
 
 CREATE FUNCTION edit_user_bio() RETURNS TRIGGER AS $$
 BEGIN
-		INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-		VALUES (gen_edit_id(NEW.id, 'BIO'), NEW.id, NEW.id, 'BIO', NEW.bio, now());
-		RETURN NEW;
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'BIO'), NEW.id, NEW.id, 'BIO', NEW.bio, now());
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-CREATE TRIGGER edit_user_bio_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.bio IS DISTINCT FROM NEW.bio) EXECUTE FUNCTION edit_user_bio();
+
+CREATE TRIGGER edit_user_bio_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.bio IS DISTINCT FROM NEW.bio) EXECUTE FUNCTION edit_user_bio();CREATE FUNCTION edit_item_image() RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'IMG'), NEW.id, NEW.updated_by, 'IMG', NEW.image, now());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER edit_item_image_trigger AFTER UPDATE ON public.items FOR EACH ROW WHEN (OLD.image IS DISTINCT FROM NEW.image) EXECUTE FUNCTION edit_item_image();
+
+CREATE FUNCTION edit_user_avatar() RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
+    VALUES (gen_edit_id(NEW.id, 'PFP'), NEW.id, NEW.updated_by, 'PFP', NEW.avatar, now());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER edit_item_image_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.avatar IS DISTINCT FROM NEW.avatar) EXECUTE FUNCTION edit_item_image();
+
