@@ -3,6 +3,18 @@ const router = express.Router();
 const pool = require('./database');
 const oldSlugify = require('slugify');
 const slugify = (text) => oldSlugify(text, { lower: true });
+const multer = require('multer');
+const sharp = require('sharp');
+const xxhash = require('xxhash-addon');
+const fs = require('fs').promises;
+const path = require('path');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 16777216 //16MB
+  }
+});
 
 router.use(express.json());
 
@@ -196,6 +208,58 @@ async function redirect(name,type) {
   } else {
     return name;
   }
+}
+
+router.post('/upload', upload.single('image'), async (req, res) => {
+	if (!req.user) return res.sendStatus(401);
+  if (!req.file) return res.status(400).json({ success: false, message: 'No file' });
+  let types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!types.includes(req.file.mimetype)) return res.status(400).json({ success: false, error: 'Unsupported file type' });
+  try {
+    let normalized = await normalizeImage(req.file.buffer);
+    let imageId = hashImage(normalized);
+    let result = await saveImage(imageId, normalized, req.user.id);
+    res.json({ success: true, ...result });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false });
+  }
+});
+
+function hashImage(buffer) {
+  let hash = xxhash.XXHash128.hash(buffer).toString('base64url');
+  return hash;
+}
+
+async function normalizeImage(buffer) {
+  return await sharp(buffer)
+    .resize(1024, 1024, { 
+      fit: 'inside', 
+      withoutEnlargement: true 
+    })
+    .webp({ quality: 80 })
+    .rotate()
+    .toBuffer();
+}
+
+async function saveImage(imageId, buffer, userId) {
+  let uploadDir = path.join(__dirname, '..', 'public', 'uploads');
+  await fs.mkdir(uploadDir, { recursive: true });
+  let filePath = `/uploads/${imageId}.webp`;
+  let diskPath = path.join(uploadDir, `${imageId}.webp`);
+  let imageResult = await pool.query(
+    'INSERT INTO images (id) VALUES ($1) ON CONFLICT (id) DO NOTHING RETURNING id',
+    [imageId]
+  );
+  await pool.query(
+    'INSERT INTO uploads (image_id, user_id) VALUES ($1, $2) ON CONFLICT (image_id, user_id) DO NOTHING',
+    [imageId, userId]
+  );
+  if (imageResult.rows.length > 0) {
+    await fs.writeFile(diskPath, buffer);
+  }
+  
+  return { isNew: imageResult.rows.length > 0, filePath, imageId };
 }
 
 module.exports = router;

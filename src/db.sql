@@ -152,15 +152,21 @@ CREATE INDEX redirects_to_name_idx ON public.redirects(to_name);
 CREATE INDEX redirects_redirect_type_idx ON public.redirects(redirect_type);
 
 CREATE TABLE public.images (
-    id TEXT NOT NULL UNIQUE, 
-    file_path TEXT NOT NULL,
-    uploaded_by TEXT NOT NULL,
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    CONSTRAINT images_uploader_fkey FOREIGN KEY (uploaded_by) REFERENCES public.users(id) ON DELETE RESTRICT
+    id TEXT NOT NULL UNIQUE,
+    PRIMARY KEY (id)
 );
 
-CREATE INDEX images_uploader_idx ON public.images(uploaded_by);
+CREATE TABLE public.uploads (
+    image_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (image_id, user_id),
+    CONSTRAINT uploads_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE,
+    CONSTRAINT uploads_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX uploads_image_id_idx ON public.uploads(image_id);
+CREATE INDEX uploads_user_id_idx ON public.uploads(user_id);
 
 CREATE TABLE public.edits (
     id TEXT, 
