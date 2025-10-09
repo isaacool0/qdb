@@ -51,21 +51,23 @@ app.get('/list/:tags/:mode', async (req, res) => {
 //TODO merge queries 
 app.get('/item/:item/:action?', async (req, res) => {
   let name = req.params.item;
-  let id = (await pool.query('SELECT id FROM items WHERE name = $1', [name])).rows[0]?.id;
-	if (!id) return res.redirect(302, `/new/item?name=${name}`);
+  let result = (await pool.query('SELECT id, description, image FROM items WHERE name = $1', [name])).rows[0];
+  if (!result) return res.redirect(302, `/new/item?name=${name}`);
+  let id = result.id;
+  let desc = result.description || '';
+  let image = result.image;
   let action = req.params.action;
   let tags = (await pool.query(
     `SELECT tags.name, tags.id FROM tags
      JOIN item_tags ON tags.id = item_tags.tag_id
      JOIN items ON items.id = item_tags.item_id
      WHERE items.name = $1 AND item_tags.active = true`, [name])).rows;
-  let desc = (await pool.query('SELECT description FROM items WHERE name = $1', [name])).rows[0]?.description || '';
   let votes = await getVotes(id,'item');
-	if (!action) return res.render('item/index', {name, id, tags, desc, votes});
+  if (!action) return res.render('item/index', {name, id, tags, desc, votes, image});
   //TODO get tag votes
-	if (action === 'tags') return res.render('item/tags', {name, id, tags, desc});
+  if (action === 'tags') return res.render('item/tags', {name, id, tags, desc, image});
   if (!req.user) return res.redirect('/login');
-  if (action === 'edit') return res.render('item/edit', {name, id, tags, desc});
+  if (action === 'edit') return res.render('item/edit', {name, id, tags, desc, image});
   res.redirect(302, `/item/${name}`);
 });
 
