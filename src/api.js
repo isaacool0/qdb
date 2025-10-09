@@ -44,32 +44,23 @@ router.post('/add/:thing', async (req, res) => {
 
 //TODO edit logic
 router.post('/edit/:thing/:type?', async (req, res) => {
-	if (!req.user) return res.sendStatus(401);
-	let user = req.user.id;
+  if (!req.user) return res.sendStatus(401);
+  let user = req.user.id;
   switch (req.params.thing) {
   case 'item':
     let item = req.body.item;
-		switch (req.params.type) {
-		case 'name':
-			try {
-				await pool.query('UPDATE items SET (name, updated_by) = ($2, $3) WHERE id = $1', [item, slugify(req.body.name), user])
-				res.json({success: true});
-			} catch (e) {
-				console.error(e);
-				res.status(500).json({success: false});
-			}
-			break;
-		case 'desc':
-			try {
-    		await pool.query('UPDATE items SET (description, updated_by) = ($2, $3) WHERE id = $1', [item, req.body.desc, user]);
-        res.json({success: true});
-			} catch (e) {
-				console.error(e);
-				res.status(500).json({success: false});
-			}
-    	break;
-		case 'tags':
-			let newtags = new Set(req.body.tags.map(tag => slugify(tag)));
+    switch (req.params.type) {
+    case 'name':
+      res.json(await editString('items', 'name', item, slugify(req.body.name), user));
+      break;
+    case 'desc':
+      res.json(await editString('items', 'description', item, req.body.desc, user));
+      break;
+    case 'image':
+      res.json(await editString('items', 'image', item, req.body.image, user));
+      break;
+    case 'tags':
+      let newtags = new Set(req.body.tags.map(tag => slugify(tag)));
       try {
         let oldtags = (await pool.query(`
         SELECT tags.id, tags.name, item_tags.active
@@ -77,63 +68,68 @@ router.post('/edit/:thing/:type?', async (req, res) => {
         JOIN item_tags ON tags.id = item_tags.tag_id 
         WHERE item_tags.item_id = $1
         `, [item])).rows.map(row => ({ id: row.id, name: row.name, active: row.active}));
-      for (let tag of newtags) {
-        let oldtag = oldtags.find(t => t.name === tag);
-        if (oldtag) {
-          if (!oldtag.active) {
-            await pool.query('UPDATE item_tags SET active = true WHERE item_id = $1 AND tag_id = $2', [item, oldtag.id]);
+        for (let tag of newtags) {
+          let oldtag = oldtags.find(t => t.name === tag);
+          if (oldtag) {
+            if (!oldtag.active) {
+              await pool.query('UPDATE item_tags SET active = true WHERE item_id = $1 AND tag_id = $2', [item, oldtag.id]);
             }
-        } else {
-          await addTags(item, [tag]);
+          } else {
+            await addTags(item, [tag]);
+          }
         }
-      }
-      for(let oldtag of oldtags) {
-        if (!newtags.has(oldtag.name)) {
-          await pool.query('UPDATE item_tags SET active = false WHERE item_id = $1 AND tag_id = $2', [item, oldtag.id]);
-        };
-      }
-      res.json({success: true});
+        for(let oldtag of oldtags) {
+          if (!newtags.has(oldtag.name)) {
+            await pool.query('UPDATE item_tags SET active = false WHERE item_id = $1 AND tag_id = $2', [item, oldtag.id]);
+          }
+        }
+        res.json({success: true});
       } catch (e) {
         console.error(e);
-        res.status(500).json({success: false});        
+        res.status(500).json({success: false});
       }
-  	  break;
+      break;
     }
     break;
   case 'tag':
-   	switch(req.params.type) {
-   		case 'name':
-   			//TODO edit tag name
-        break;
-			case 'info': 
-			  //TODO edit tag info
-        break;
-   	}
+    switch(req.params.type) {
+    case 'name':
+      //TODO edit tag name
+      break;
+    case 'info':
+      //TODO edit tag info
+      break;
+    }
     break;
   case 'user':
-		switch (req.params.type) {
-		case 'name':
-			try {
-				await pool.query('UPDATE users SET name = ($2) WHERE id = $1', [user, slugify(req.body.name)]);
-				res.json({success: true});
-			} catch (e) {
-				console.error(e);
-				res.status(500).json({success: false});
-			}
-			break;
-		case 'bio':
-			try {
-    		await pool.query('UPDATE users SET bio = ($2) WHERE id = $1', [user, req.body.bio])
-        res.json({success: true});
-			} catch (e) {
-				console.error(e);
-				res.status(500).json({success: false});
-			}
-    	break;
-		};
+    switch (req.params.type) {
+    case 'name':
+      res.json(await editString('users', 'name', user, slugify(req.body.name), user));
+      break;
+    case 'bio':
+      res.json(await editString('users', 'bio', user, req.body.bio, user));
+      break;
+    case 'avatar':
+      res.json(await editString('users', 'avatar', user, req.body.avatar, user));
+      break;
+    }
     break;
   }
 });
+
+async function editString(table, type, id, value, user) {
+  try {
+    if(table=='users') {
+      await pool.query(`UPDATE ${table} SET ${type} = $2 WHERE id = $1`, [user, value]);
+    } else {
+      await pool.query(`UPDATE ${table} SET (${type}, updated_by) = ($2, $3) WHERE id = $1`, [id, value, user]);
+    }
+    return {success: true};
+  } catch (e) {
+    console.error(e);
+    return {success: false};
+  }
+}
 
 async function addTags(item,tags) {
   for (let tag of tags) {
