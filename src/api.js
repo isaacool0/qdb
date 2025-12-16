@@ -5,7 +5,7 @@ const oldSlugify = require('slugify');
 const slugify = (text) => oldSlugify(text, { lower: true });
 const multer = require('multer');
 const sharp = require('sharp');
-const xxhash = require('xxhash-addon');
+const blake3 = require('blake3');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -209,7 +209,7 @@ async function redirect(name,type) {
 router.post('/upload', upload.single('image'), async (req, res) => {
 	if (!req.user) return res.sendStatus(401);
   if (!req.file) return res.status(400).json({ success: false, message: 'No file' });
-  let types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  let types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
   if (!types.includes(req.file.mimetype)) return res.status(400).json({ success: false, error: 'Unsupported file type' });
   try {
     let normalized = await normalizeImage(req.file.buffer);
@@ -223,8 +223,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 });
 
 function hashImage(buffer) {
-  let hash = xxhash.XXHash128.hash(buffer).toString('base64url');
-  return hash;
+  return blake3.hash(buffer).slice(0, 16).toString('base64url');
 }
 
 async function normalizeImage(buffer) {
@@ -233,7 +232,7 @@ async function normalizeImage(buffer) {
       fit: 'inside', 
       withoutEnlargement: true 
     })
-    .webp({ quality: 80 })
+    .avif({ quality: 60 })
     .rotate()
     .toBuffer();
 }
@@ -241,8 +240,8 @@ async function normalizeImage(buffer) {
 async function saveImage(imageId, buffer, userId) {
   let uploadDir = path.join(__dirname, '..', 'public', 'uploads');
   await fs.mkdir(uploadDir, { recursive: true });
-  let filePath = `/uploads/${imageId}.webp`;
-  let diskPath = path.join(uploadDir, `${imageId}.webp`);
+  let filePath = `/uploads/${imageId}.avif`;
+  let diskPath = path.join(uploadDir, `${imageId}.avif`);
   let imageResult = await pool.query(
     'INSERT INTO images (id) VALUES ($1) ON CONFLICT (id) DO NOTHING RETURNING id',
     [imageId]
