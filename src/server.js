@@ -125,7 +125,7 @@ app.get('/get-votes/:object/:type', async (req, res) => {
 	return votes;
 };*/
 
-async function getResults(tags, mode=, dir) {
+async function getResults(tags, mode, dir) {
   dir = dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
   let order
   switch (mode) {
