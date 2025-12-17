@@ -40,7 +40,7 @@ router.post('/add/:thing', async (req, res) => {
 		if ((await pool.query('SELECT 1 FROM items WHERE name = $1', [name])).rows.length) {
       return res.status(400).json({success: false, nameExists: true});
     } else {
-      let result = await pool.query('INSERT INTO items (name, description, image, updated_by) VALUES ($1, $2, $3) RETURNING id', [name, desc, image, req.user.id]);
+      let result = await pool.query('INSERT INTO items (name, description, image, updated_by) VALUES ($1, $2, $3, $4) RETURNING id', [name, desc, image, req.user.id]);
       if (result.rowCount > 0) {
         res.status(200).json({success: true, nameExists: false});
         await addTags(result.rows[0].id,tags);
