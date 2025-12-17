@@ -166,3 +166,6 @@ async function getResults(tags, mode, dir) {
   return (await pool.query(sql,[tags])).rows[0]
 }
 
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
