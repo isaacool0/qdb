@@ -49,7 +49,7 @@ app.get('/list/:tags/:mode', async (req, res) => {
 });
 
 //TODO merge queries 
-app.get('/item/:item/:action?', async (req, res) => {
+app.get('/item/:item/{/:action}', async (req, res) => {
   let name = req.params.item;
   let result = (await pool.query('SELECT id, description, image FROM items WHERE name = $1', [name])).rows[0];
   if (!result) return res.redirect(302, `/new/item?name=${name}`);
@@ -71,7 +71,7 @@ app.get('/item/:item/:action?', async (req, res) => {
   res.redirect(302, `/item/${name}`);
 });
 
-app.get('/user/:user/:action?', async (req, res) => {
+app.get('/user/:user{/:action}', async (req, res) => {
   let username = req.params.user;
   let action = req.params.action;
   let user = (await pool.query('SELECT id, name, bio FROM users WHERE name = $1', [username])).rows[0];
@@ -81,7 +81,7 @@ app.get('/user/:user/:action?', async (req, res) => {
   res.redirect(302, `/user/${username}`);
 });
 
-app.get('/new/:thing?', (req, res) => {
+app.get('/new{/:thing}', (req, res) => {
   let thing = req.params.thing;
   switch (thing) {
     case 'item':
