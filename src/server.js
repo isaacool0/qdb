@@ -105,7 +105,7 @@ app.get('/get-votes/:object/:type', async (req, res) => {
   getVotes(req.params.object, req.params.type);
 });
 
-/*async function getVotes(object, type) {
+async function getVotes(object, type) {
 	let votes;
 	if (type==='tag') {
 	  votes = (await pool.query(`
@@ -123,7 +123,7 @@ app.get('/get-votes/:object/:type', async (req, res) => {
 	  WHERE ${type}_id = $1`, [object])).rows[0];
 	}
 	return votes;
-};*/
+};
 
 async function getResults(tags, mode, dir) {
   dir = dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'

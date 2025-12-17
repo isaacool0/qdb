@@ -11,10 +11,18 @@
     field-sizing: content;
     resize: none;
   }
+  ::file-selector-button {
+    display:none;
+  }
+  ::file-selector {
+    
+  }
 	</style>
 </head>
 <body>
   <p>New Item</p>
+  <input type="file" id="image" onchange="showFileName()" hidden accept="image/jpeg,image/png,image/gif,image/webp,image/avif" >
+  <button onclick="document.getElementById('image').click()">Image</button> <span id="filename"></span><br>
   <input type="text" id="name" placeholder="name"><br>
   <textarea id="desc" placeholder="description"></textarea><br>
   <span id="tags">
@@ -25,10 +33,11 @@
 <script src="/js/tags.js"></script>
 <script>
 let msg = document.getElementById('msg');
-function addItem() {
+async function addItem() {
   let name = document.getElementById('name').value;
   let desc = document.getElementById('desc').value;
-  let tags = getTags();
+  let tags = await getTags();
+  let image = await upload();
 	fetch('/api/add/item', {
 	  method: 'POST',
 	  headers: {
@@ -38,7 +47,8 @@ function addItem() {
 	    {
 	      name: name, 
 	      desc: desc,
-	      tags: tags
+	      tags: tags,
+	      image: image
 	    }    
 	  ),
 	})
@@ -55,6 +65,20 @@ function addItem() {
 			msg.textContent = 'error';
 		}
 	});
+};
+
+async function upload() {
+  let image = document.getElementById('image').files[0]
+  let fd = new FormData()
+  fd.append('image', image)
+  let result = await fetch('/api/upload', { method: 'POST', body: fd }).then(r => r.json())
+  return result.imageId
+}
+
+function showFileName() {
+  let file = document.getElementById('image').files[0];
+  document.getElementById('filename').textContent =
+    file ? file.name : '';
 };
 
 window.onload = () => {
