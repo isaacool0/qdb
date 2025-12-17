@@ -5,9 +5,18 @@ const oldSlugify = require('slugify');
 const slugify = (text) => oldSlugify(text, { lower: true });
 const multer = require('multer');
 const sharp = require('sharp');
-const blake3 = require('blake3');
 const fs = require('fs').promises;
 const path = require('path');
+
+let bhash;
+
+async function loadBlake3() {
+  if (!bhash) {
+    const wasm = await import('hash-wasm');
+    bhash = wasm.blake3;
+  }
+  return bhash;
+}
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -222,8 +231,10 @@ router.post('/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-function hashImage(buffer) {
-  return blake3.hash(buffer).slice(0, 16).toString('base64url');
+async function hashImage(buffer) {
+  let blake3 = await loadBlake3();
+  let hex = await blake3(buffer);
+  return Buffer.from(hex, 'hex').slice(0, 16).toString('base64url');
 }
 
 async function normalizeImage(buffer) {
@@ -253,7 +264,6 @@ async function saveImage(imageId, buffer, userId) {
   if (imageResult.rows.length > 0) {
     await fs.writeFile(diskPath, buffer);
   }
-  
   return { isNew: imageResult.rows.length > 0, filePath, imageId };
 }
 
