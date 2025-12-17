@@ -36,10 +36,11 @@ router.post('/add/:thing', async (req, res) => {
     let name = await redirect(slugify(req.body.name),'I');
     let desc = req.body.desc;
     let tags = req.body.tags;
+    let image = req.body.image;
 		if ((await pool.query('SELECT 1 FROM items WHERE name = $1', [name])).rows.length) {
       return res.status(400).json({success: false, nameExists: true});
     } else {
-      let result = await pool.query('INSERT INTO items (name, description, updated_by) VALUES ($1, $2, $3) RETURNING id', [name, desc, req.user.id]);
+      let result = await pool.query('INSERT INTO items (name, description, image, updated_by) VALUES ($1, $2, $3) RETURNING id', [name, desc, image, req.user.id]);
       if (result.rowCount > 0) {
         res.status(200).json({success: true, nameExists: false});
         await addTags(result.rows[0].id,tags);
@@ -222,7 +223,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
   if (!types.includes(req.file.mimetype)) return res.status(400).json({ success: false, error: 'Unsupported file type' });
   try {
     let normalized = await normalizeImage(req.file.buffer);
-    let imageId = hashImage(normalized);
+    let imageId = await hashImage(normalized);
     let result = await saveImage(imageId, normalized, req.user.id);
     res.json({ success: true, ...result });
   } catch (e) {
@@ -249,9 +250,8 @@ async function normalizeImage(buffer) {
 }
 
 async function saveImage(imageId, buffer, userId) {
-  let uploadDir = path.join(__dirname, '..', 'public', 'uploads');
+  let uploadDir = path.join(__dirname, '..', 'uploads');
   await fs.mkdir(uploadDir, { recursive: true });
-  let filePath = `/uploads/${imageId}.avif`;
   let diskPath = path.join(uploadDir, `${imageId}.avif`);
   let imageResult = await pool.query(
     'INSERT INTO images (id) VALUES ($1) ON CONFLICT (id) DO NOTHING RETURNING id',
@@ -264,7 +264,7 @@ async function saveImage(imageId, buffer, userId) {
   if (imageResult.rows.length > 0) {
     await fs.writeFile(diskPath, buffer);
   }
-  return { isNew: imageResult.rows.length > 0, filePath, imageId };
+  return { isNew: imageResult.rows.length > 0, imageId };
 }
 
 module.exports = router;

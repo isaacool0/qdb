@@ -6,11 +6,13 @@ const api = require('./api');
 const { addSession, auth } = require('./auth/auth');
 const app = express();
 const port = process.env.PORT;
+const path = require('path');
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
