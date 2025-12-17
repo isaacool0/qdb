@@ -49,7 +49,7 @@ app.get('/list/:tags/:mode', async (req, res) => {
 });
 
 //TODO merge queries 
-app.get('/item/:item/{/:action}', async (req, res) => {
+app.get('/item/:item{/:action}', async (req, res) => {
   let name = req.params.item;
   let result = (await pool.query('SELECT id, description, image FROM items WHERE name = $1', [name])).rows[0];
   if (!result) return res.redirect(302, `/new/item?name=${name}`);
