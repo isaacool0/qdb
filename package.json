@@ -1,17 +1,36 @@
 {
+  "name": "qdb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacool0/qdb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/isaacool0/qdb/issues"
+  },
+  "homepage": "https://github.com/isaacool0/qdb#readme",
   "dependencies": {
-    "connect-redis": "^8.0.1",
-    "dotenv": "^16.4.7",
+    "connect-redis": "^9.0.0",
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
-    "express": "^4.21.2",
-    "express-session": "^1.18.1",
+    "express": "^5.2.1",
+    "express-session": "^1.18.2",
+    "hash-wasm": "^4.12.0",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
-    "pg": "^8.13.3",
-    "redis": "^4.7.0",
-    "sharp": "^0.34.4",
-    "slugify": "^1.6.6",
-    "xxhash-addon": "^2.0.3"
+    "pg": "^8.16.3",
+    "redis": "^5.10.0",
+    "sharp": "^0.34.5",
+    "slugify": "^1.6.6"
   }
 }
