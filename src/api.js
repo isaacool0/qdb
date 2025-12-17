@@ -52,7 +52,7 @@ router.post('/add/:thing', async (req, res) => {
 });
 
 //TODO edit logic
-router.post('/edit/:thing/:type?', async (req, res) => {
+router.post('/edit/:thing{/:type}', async (req, res) => {
   if (!req.user) return res.sendStatus(401);
   let user = req.user.id;
   switch (req.params.thing) {
