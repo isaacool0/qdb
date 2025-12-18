@@ -9,10 +9,26 @@
     min-width: 50px;
     field-sizing: content;
   }  
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+  }
+  img:hover {
+    opacity: 50%;
+  }
   </style>
 </head>
 <body>
-  <h1 id="name" contenteditable="true"><%= name %></h1>
+  <h1>
+    <img src="/uploads/<%= image %>.avif" alt="<%= name %>" onclick="editImage()" id="image">
+    <span id="name" contenteditable="true"><%= name %></span>
+  </h1>
   <span id="tags">
     <% tags.forEach(tag => { %><span class="tag"><%= tag.name %></span><% }) %><input id='tagger' type="text" placeholder="add tag" onkeydown="tagInput(event)">
   </span><br>
@@ -23,18 +39,19 @@
   <p id="msg"></p>
 <script src="/js/tags.js"></script>
 <script>
-let ogname = '<%= JSON.stringify(name) %>';
-let ogdesc = '<%= JSON.stringify(desc) %>';
+let ogname = '<%= name %>';
+let ogdesc = '<%= desc %>';
 let ogtags = getTags();
-let name = '<%= JSON.stringify(name) %>';
-let desc = '<%= JSON.stringify(desc) %>';
+let name = '<%= name %>';
+let desc = '<%= desc %>';
 let tags = getTags();
+let imageEdited = false;
 
 function checkTags() {
   return JSON.stringify(tags) === JSON.stringify(ogtags);
 };
 
-function save() {
+async function save() {
   name = document.getElementById('name').textContent;
   desc = document.getElementById('desc').textContent;
   tags = getTags();
@@ -44,13 +61,24 @@ function save() {
     return;
   };
   if (name!=ogname) {
-    edit("name",name);
+    edit('name',name);
   };
   if (desc!=ogdesc) {
-    edit("desc",desc);
+    edit('desc',desc);
   };
   if (!checkTags()) {
-    edit("tags",tags);
+    edit('tags',tags);
+  };
+  if (imageEdited && newImage) {
+    let image = await upload();
+    if(image) {
+      edit('image',image);
+      imageEdited = false;
+      newImage = null;
+    } else {
+      document.getElementById('msg').style.color = '#F00';
+      document.getElementById('msg').textContent = 'error uploading image';
+    }
   };
 };
 
@@ -72,7 +100,9 @@ function edit(type,value) {
     if (a.success) {
       document.getElementById('msg').style.color = '#0F0';
       document.getElementById('msg').textContent = 'success!';
-      eval(`og${type} = value`);
+      if(type!='image') { 
+        eval(`og${type} = value`);
+      }
     } else {
       document.getElementById('msg').style.color = '#F00';
       document.getElementById('msg').textContent = 'error';
@@ -80,6 +110,40 @@ function edit(type,value) {
     }
   });
 };
+
+let newImage;
+function editImage() {
+  let img = document.getElementById('image')
+  if(imageEdited) {
+    img.src = '/uploads/<%= image %>.avif';
+    imageEdited = false;
+    newImage = null;
+    return;
+  }
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/gif,image/webp,image/avif';
+  input.onchange = () => {
+    let image = input.files[0];
+    if (!image) return;
+    let file = new FileReader()
+      file.onload = e => {
+        img.src= e.target.result;
+      }
+    file.readAsDataURL(image);
+    imageEdited = true;
+    newImage = image;
+  }
+  input.click();
+}
+
+async function upload() {
+  if(!newImage) return null;
+  let fd = new FormData();
+  fd.append('image', newImage);
+  let result = await fetch('/api/upload', { method: 'POST', body: fd }).then(r => r.json());
+  return result.imageId;
+}
 </script>
 </body>
 </html>
