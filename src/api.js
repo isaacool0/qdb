@@ -27,7 +27,7 @@ const upload = multer({
 
 router.use(express.json());
 
-//TODO add username/passwprd accounts
+//TODO add username/password accounts
 //TODO add logging for users
 router.post('/add/:thing', async (req, res) => {
 	if (!req.user) return res.sendStatus(401);
@@ -52,7 +52,9 @@ router.post('/add/:thing', async (req, res) => {
   }
 });
 
-//TODO edit logic
+//TODO prevent users from editing each other
+//TODO add ratelimits
+//TODO cap size of edits
 router.post('/edit/:thing{/:type}', async (req, res) => {
   if (!req.user) return res.sendStatus(401);
   let user = req.user.id;
@@ -156,6 +158,7 @@ async function addTags(item,tags) {
   };
 }
 
+//TODO add ratelimits
 router.post('/vote/:type', async (req, res) => {
 	if (!req.user) return res.sendStatus(401);
 	if (!['item','tag','comment','profile'].includes (req.params.type)) return res.sendStatus(400);
@@ -218,6 +221,7 @@ async function redirect(name,type) {
   }
 }
 
+//TODO add ratelimits
 router.post('/upload', upload.single('image'), async (req, res) => {
 	if (!req.user) return res.sendStatus(401);
   if (!req.file) return res.status(400).json({ success: false, message: 'No file' });
