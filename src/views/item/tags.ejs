@@ -10,7 +10,7 @@
 	<p>tags:</p>
 	  <ul>
 	  <% tags.forEach(tag => { %>
-	    <li id='<%= tag.id %>'><a href="/list/<%= tag.name %>/"><%= tag.name %></a>
+	    <li id='<%= tag.id %>'><a href="/list/<%= tag.name %>/top"><%= tag.name %></a>
 		<button onclick="vote(['<%= id %>', '<%= tag.id %>'], 1, 'tag', 'vote-<%= tag.id %>' )">↑</button>
 		<button onclick="vote(['<%= id %>', '<%= tag.id %>'], 0, 'tag', 'vote-<%= tag.id %>' )">↓</button>
 		<span id="vote-<%= tag.id %>"></span></li>

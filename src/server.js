@@ -36,9 +36,9 @@ app.get('/test/:test', async (req, res) => {
   console.log(test);
 });
 
-app.get('/list/:tags/:mode', async (req, res) => {
-  if (!req.params.mode) return res.redirect(302, `/list/${tags.join(":")}/top`);
+app.get('/list/:tags{/:mode}', async (req, res) => {
   let tags = req.params.tags ? req.params.tags.split(":") : [];
+  if (!req.params.mode) return res.redirect(302, `/list/${tags.join(":")}/top`);
   if (!req.params.tags) return res.redirect(302, '/');
   if (tags.length === 0) return res.redirect(302, '/');
   let result = await getResults(tags, req.params.mode, req.query.dir||'desc')
