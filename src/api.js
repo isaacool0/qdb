@@ -120,7 +120,7 @@ router.post('/edit/:thing{/:type}', async (req, res) => {
       res.json(await editString('users', 'bio', user, req.body.bio, user));
       break;
     case 'avatar':
-      res.json(await editString('users', 'avatar', user, req.body.avatar, user));
+      //res.json(await editString('users', 'avatar', user, req.body.avatar, user));
       break;
     }
     break;
@@ -128,6 +128,8 @@ router.post('/edit/:thing{/:type}', async (req, res) => {
 });
 
 async function editString(table, type, id, value, user) {
+	if (!['items','users'].includes (table)) return {success: false};;
+	if (!['name','description','image','bio','avatar'].includes (type)) return {success: false};;
   try {
     if(table=='users') {
       await pool.query(`UPDATE ${table} SET ${type} = $2 WHERE id = $1`, [user, value]);
