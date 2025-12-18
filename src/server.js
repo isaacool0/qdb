@@ -44,7 +44,6 @@ app.get('/list/:tags/:mode', async (req, res) => {
   let result = await getResults(tags, req.params.mode, req.query.dir||'desc')
   if (result.items?.length > 0) {
 		res.render('list/index', { tags: result.tags, items: result.items});
-		console.log(result);
   } else {
     res.render('list/no-results', { tags: tags });
   }
@@ -128,45 +127,53 @@ async function getVotes(object, type) {
 };
 
 async function getResults(tags, mode, dir) {
-  dir = dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
-  let order
-  switch (mode) {
-    case 'pop':
-      order = `(upvotes + downvotes) ${dir}`
-      break
-    case 'top':
-    default:
-      order = `rating ${dir}`
-  }
-  let sql = `
+  // sanitize direction
+  dir = dir && dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+  // whitelist order columns
+  const orderMap = {
+    pop: '(upvotes + downvotes)',
+    top: 'rating'
+  };
+  const orderCol = orderMap[mode] || 'rating';
+  const order = `${orderCol} ${dir}`;
+
+  const sql = `
     WITH sel_tags AS (
       SELECT id, name FROM tags WHERE name = ANY($1::text[])
     ),
     item_stats AS (
       SELECT
-        i.id,
-        i.name,
-        i.created_at,
-        COALESCE(SUM(CASE WHEN tv.rating THEN 1 ELSE 0 END)::float / GREATEST(COUNT(DISTINCT st.id),1),0) AS upvotes,
-        COALESCE(SUM(CASE WHEN NOT tv.rating THEN 1 ELSE 0 END)::float / GREATEST(COUNT(DISTINCT st.id),1),0) AS downvotes,
-        COALESCE(SUM(CASE WHEN tv.rating THEN 1 ELSE -1 END)::float / GREATEST(COUNT(DISTINCT st.id),1),0) AS rating
-      FROM items i
-      JOIN item_tags it ON it.item_id=i.id AND it.active=true
-      JOIN sel_tags st ON st.id=it.tag_id
-      LEFT JOIN tag_votes tv ON tv.item_id=i.id AND tv.tag_id=st.id
-      GROUP BY i.id,i.name,i.created_at
+        items.id,
+        items.name,
+        items.image,
+        COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS TRUE)::float AS upvotes,
+        COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS FALSE)::float AS downvotes,
+        (100.0 * (COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS TRUE) + 1)) /
+          (COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS TRUE) + 1 +
+           COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS FALSE)) AS rating
+      FROM items
+      JOIN item_tags ON item_tags.item_id = items.id AND item_tags.active = true
+      JOIN sel_tags ON sel_tags.id = item_tags.tag_id
+      LEFT JOIN tag_votes ON tag_votes.item_id = items.id AND tag_votes.tag_id = sel_tags.id
+      GROUP BY items.id, items.name, items.image
     )
     SELECT
-      (SELECT json_agg(jsonb_build_object(
-        'id',id,
-        'name',name,
-        'upvotes',upvotes,
-        'downvotes',downvotes,
-        'rating',rating
-      ) ORDER BY ${order}) FROM item_stats) AS items,
-      (SELECT json_agg(jsonb_build_object('id',id,'name',name)) FROM sel_tags) AS tags`
-  return (await pool.query(sql,[tags])).rows[0]
+      (SELECT json_agg(
+        jsonb_build_object(
+          'id', item_stats.id,
+          'name', item_stats.name,
+          'image', item_stats.image,
+          'upvotes', item_stats.upvotes,
+          'downvotes', item_stats.downvotes,
+          'rating', item_stats.rating
+        ) ORDER BY ${order}
+      ) FROM item_stats) AS items,
+      (SELECT json_agg(jsonb_build_object('id', sel_tags.id, 'name', sel_tags.name)) FROM sel_tags) AS tags
+  `;
+  return (await pool.query(sql, [tags])).rows[0];
 }
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
