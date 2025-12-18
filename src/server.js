@@ -27,15 +27,7 @@ app.get('/', (req, res) => {
   res.render('home');
 });
 
-app.get('/test', (req, res) => {
-  res.json({user: req.user});
-});
-
-
-app.get('/test/:test', async (req, res) => {
-  console.log(test);
-});
-
+//TODO paginate results
 app.get('/list/:tags{/:mode}', async (req, res) => {
   let tags = req.params.tags ? req.params.tags.split(":") : [];
   if (!req.params.mode) return res.redirect(302, `/list/${tags.join(":")}/top`);
@@ -106,6 +98,7 @@ app.get('/get-votes/:object/:type', async (req, res) => {
   getVotes(req.params.object, req.params.type);
 });
 
+//TODO sanitize type
 async function getVotes(object, type) {
 	let votes;
 	if (type==='tag') {
@@ -126,19 +119,17 @@ async function getVotes(object, type) {
 	return votes;
 };
 
+//TODO paginate query
 async function getResults(tags, mode, dir) {
-  // sanitize direction
   dir = dir && dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-  // whitelist order columns
-  const orderMap = {
+  let orderMap = {
     pop: '(upvotes + downvotes)',
     top: 'rating'
   };
-  const orderCol = orderMap[mode] || 'rating';
-  const order = `${orderCol} ${dir}`;
+  let orderCol = orderMap[mode] || 'rating';
+  let order = `${orderCol} ${dir}`;
 
-  const sql = `
+  let sql = `
     WITH sel_tags AS (
       SELECT id, name FROM tags WHERE name = ANY($1::text[])
     ),
