@@ -162,7 +162,7 @@ async function addTags(item,tags) {
 router.post('/vote/:type', async (req, res) => {
 	if (!req.user) return res.sendStatus(401);
 	if (!['item','tag','comment','profile'].includes (req.params.type)) return res.sendStatus(400);
-	let result = await vote(req.user.id, req.body.object, req.params.type, req.body.rating);
+	let result = await vote(req.user.id, req.body.object, req.params.type, req.body.vote);
 	if (result.success===true) {
 		res.json(result);
 	} else {
@@ -170,26 +170,26 @@ router.post('/vote/:type', async (req, res) => {
 	};
 });
 
-async function vote(user, object, type, rating) {
-	let vote = rating === 1 ? true : false;
+async function vote(user, object, type, value) {
+	let vote = value === 1 ? true : false;
 	let result;
 	if (type==='tag') {
-		result = await pool.query(`SELECT rating FROM tag_votes WHERE user_id = $1 AND item_id = $2 AND tag_id = $3`, [user, object[0], object[1]]);
+		result = await pool.query(`SELECT vote FROM tag_votes WHERE user_id = $1 AND item_id = $2 AND tag_id = $3`, [user, object[0], object[1]]);
 	} else {
-		result = await pool.query(`SELECT rating FROM ${type}_votes WHERE user_id = $1 AND ${type}_id = $2`, [user, object]);
+		result = await pool.query(`SELECT vote FROM ${type}_votes WHERE user_id = $1 AND ${type}_id = $2`, [user, object]);
 	}
-	if (result.rows.length===0) return await addVote(user, object, type, rating); //add vote
-	if (result.rows[0].rating===vote) return await delVote(user, object, type); //remove vote
-	if (result.rows[0].rating!=vote) { await delVote(user, object, type); return await addVote(user, object, type, rating)}; //change vote
+	if (result.rows.length===0) return await addVote(user, object, type, vote); //add vote
+	if (result.rows[0].vote===vote) return await delVote(user, object, type); //remove vote
+	if (result.rows[0].vote!=vote) { await delVote(user, object, type); return await addVote(user, object, type, vote)}; //change vote
 	return {success: false};
 };
 
-async function addVote(user, object, type, rating) {
+async function addVote(user, object, type, vote) {
 try {
 	if (type==='tag') {
-		await pool.query(`INSERT INTO tag_votes (user_id, item_id, tag_id, rating) VALUES ($1, $2, $3, $4)`, [user, object[0], object[1], rating]);
+		await pool.query(`INSERT INTO tag_votes (user_id, item_id, tag_id, vote) VALUES ($1, $2, $3, $4)`, [user, object[0], object[1], vote]);
 	} else {
-		await pool.query(`INSERT INTO ${type}_votes (user_id, ${type}_id, rating) VALUES ($1, $2, $3)`, [user, object, rating]);
+		await pool.query(`INSERT INTO ${type}_votes (user_id, ${type}_id, vote) VALUES ($1, $2, $3)`, [user, object, vote]);
 	}
 	return {success: true, action: 'add'};
 	} catch (e) {

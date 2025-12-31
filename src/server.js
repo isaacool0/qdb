@@ -104,15 +104,15 @@ async function getVotes(object, type) {
 	if (type==='tag') {
 	  votes = (await pool.query(`
 	  SELECT
-	     COUNT(*) FILTER (WHERE rating = true) AS upvotes, 
-	     COUNT(*) FILTER (WHERE rating = false) AS downvotes 
+	     COUNT(*) FILTER (WHERE vote = true) AS upvotes, 
+	     COUNT(*) FILTER (WHERE vote = false) AS downvotes 
 	  FROM tag_votes 
 	  WHERE item_id = $1 AND tag_id = $2`, [object[0], object[1]])).rows[0];
 	} else {
 	  votes = (await pool.query(`
 	  SELECT 
-	    COUNT(*) FILTER (WHERE rating = true) AS upvotes, 
-	    COUNT(*) FILTER (WHERE rating = false) AS downvotes 
+	    COUNT(*) FILTER (WHERE vote = true) AS upvotes, 
+	    COUNT(*) FILTER (WHERE vote = false) AS downvotes 
 	  FROM ${type}_votes 
 	  WHERE ${type}_id = $1`, [object])).rows[0];
 	}
@@ -138,11 +138,11 @@ async function getResults(tags, mode, dir) {
         items.id,
         items.name,
         items.image,
-        COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS TRUE)::float AS upvotes,
-        COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS FALSE)::float AS downvotes,
-        (100.0 * (COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS TRUE) + 1)) /
-          (COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS TRUE) + 1 +
-           COUNT(tag_votes.*) FILTER (WHERE tag_votes.rating IS FALSE)) AS rating
+        COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE)::float AS upvotes,
+        COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS FALSE)::float AS downvotes,
+        (100.0 * (COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE) + 1)) /
+          (COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE) + 1 +
+           COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS FALSE)) AS rating
       FROM items
       JOIN item_tags ON item_tags.item_id = items.id AND item_tags.active = true
       JOIN sel_tags ON sel_tags.id = item_tags.tag_id

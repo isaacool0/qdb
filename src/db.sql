@@ -1,3 +1,4 @@
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 CREATE FUNCTION b64url(b64 TEXT) RETURNS TEXT AS $$
@@ -93,7 +94,7 @@ CREATE INDEX item_tags_item_tag_idx ON public.item_tags(item_id, tag_id);
 CREATE TABLE public.item_votes (
   user_id TEXT NOT NULL,
   item_id TEXT NOT NULL,
-  rating BOOL NOT NULL,
+  vote BOOL NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, item_id),
   CONSTRAINT item_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
@@ -107,7 +108,7 @@ CREATE TABLE public.tag_votes (
   user_id TEXT NOT NULL,
   item_id TEXT NOT NULL,
   tag_id TEXT NOT NULL,
-  rating BOOL NOT NULL,
+  vote BOOL NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, item_id, tag_id),
   CONSTRAINT tag_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
@@ -121,7 +122,7 @@ CREATE INDEX tag_votes_item_tag_idx ON public.tag_votes(item_id, tag_id);
 CREATE TABLE public.comment_votes (
   user_id TEXT NOT NULL,
   comment_id TEXT NOT NULL,
-  rating BOOL NOT NULL,
+  vote BOOL NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, comment_id),
   CONSTRAINT comment_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
@@ -134,7 +135,7 @@ CREATE INDEX comment_votes_comment_id_idx ON public.comment_votes(comment_id);
 CREATE TABLE public.profile_votes (
   user_id TEXT NOT NULL,
   profile_id TEXT NOT NULL,
-  rating BOOL NOT NULL,
+  vote BOOL NOT NULL,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, profile_id),
   CONSTRAINT profile_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE,
