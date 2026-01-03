@@ -27,19 +27,24 @@ app.get('/', (req, res) => {
   res.render('home');
 });
 
-//TODO paginate results
+//TODO paginate results on frontend template
+//TODO make frontend show rating as a % for top, or (upvotes-downvotes)/tags for pop
 app.get('/list/:tags{/:mode}', async (req, res) => {
   let tags = req.params.tags ? req.params.tags.split(":") : [];
   if (!req.params.mode) return res.redirect(302, `/list/${tags.join(":")}/top`);
   if (!req.params.tags) return res.redirect(302, '/');
   if (tags.length === 0) return res.redirect(302, '/');
-  let result = await getResults(tags, req.params.mode, req.query.dir||'desc')
-  if (result.items?.length > 0) {
-		res.render('list/index', { tags: result.tags, items: result.items});
+  let page = parseInt(req.query.page) || 1;
+  let size = parseInt(req.query.size) || 10;
+  let dir = req.query.dir || 'desc';
+  let results = await getResults(tags, req.params.mode, dir, page, size);
+  if (results.items.length > 0) {
+    res.render('list/index', { results, page, size, dir });
   } else {
-    res.render('list/no-results', { tags: tags });
+    res.render('list/no-results', { tags });
   }
 });
+
 
 //TODO merge queries 
 app.get('/item/:item{/:action}', async (req, res) => {
@@ -119,51 +124,36 @@ async function getVotes(object, type) {
 	return votes;
 };
 
-//TODO paginate query
-async function getResults(tags, mode, dir) {
+async function getResults(tagNames, mode = 'top', dir, page, size) {
   dir = dir && dir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-  let orderMap = {
-    pop: '(upvotes + downvotes)',
-    top: 'rating'
-  };
-  let orderCol = orderMap[mode] || 'rating';
-  let order = `${orderCol} ${dir}`;
+  let offset = (page - 1) * size;
+  let order = mode === 'pop'
+    ? `(item_stats.up + item_stats.down) ${dir}`
+    : `get_rating(item_stats.up, item_stats.down) ${dir}`;
 
-  let sql = `
-    WITH sel_tags AS (
-      SELECT id, name FROM tags WHERE name = ANY($1::text[])
-    ),
-    item_stats AS (
-      SELECT
-        items.id,
-        items.name,
-        items.image,
-        COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE)::float AS upvotes,
-        COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS FALSE)::float AS downvotes,
-        (100.0 * (COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE) + 1)) /
-          (COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE) + 1 +
-           COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS FALSE)) AS rating
-      FROM items
-      JOIN item_tags ON item_tags.item_id = items.id AND item_tags.active = true
-      JOIN sel_tags ON sel_tags.id = item_tags.tag_id
-      LEFT JOIN tag_votes ON tag_votes.item_id = items.id AND tag_votes.tag_id = sel_tags.id
-      GROUP BY items.id, items.name, items.image
-    )
+  let tags = (await pool.query(`SELECT id, name FROM tags WHERE name = ANY($1)`, [tagNames])).rows;
+
+  let items = (await pool.query(`
     SELECT
-      (SELECT json_agg(
-        jsonb_build_object(
-          'id', item_stats.id,
-          'name', item_stats.name,
-          'image', item_stats.image,
-          'upvotes', item_stats.upvotes,
-          'downvotes', item_stats.downvotes,
-          'rating', item_stats.rating
-        ) ORDER BY ${order}
-      ) FROM item_stats) AS items,
-      (SELECT json_agg(jsonb_build_object('id', sel_tags.id, 'name', sel_tags.name)) FROM sel_tags) AS tags
-  `;
-  return (await pool.query(sql, [tags])).rows[0];
+      item_stats.id,
+      item_stats.name,
+      item_stats.image,
+      item_stats.up,
+      item_stats.down,
+      get_rating(item_stats.up, item_stats.down) AS rating,
+      JSON_AGG(JSON_BUILD_OBJECT('id', tags.id, 'name', tags.name)) AS tags
+    FROM item_stats
+    JOIN item_tags ON item_tags.item_id = item_stats.id
+    JOIN tags ON tags.id = item_tags.tag_id
+    GROUP BY item_stats.id, item_stats.name, item_stats.image, item_stats.up, item_stats.down
+    HAVING COUNT(DISTINCT CASE WHEN tags.id = ANY($1) THEN tags.id END) = $2
+    ORDER BY ${order}
+    LIMIT $3 OFFSET $4
+  `, [tags.map(t => t.id), tags.length, size, offset])).rows;
+
+  return {tags, items};
 }
+
 
 
 app.listen(port, () => {

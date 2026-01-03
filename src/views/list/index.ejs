@@ -19,19 +19,22 @@
 </head>
 <body>
   <h1>Search Results</h1>
-	<p>Tags: <% tags.forEach(tag => { %><a href='/list/<%= tag.name %>'><%= tag.name %></a> <% }) %></p>
+  <p>Tags: <% results.tags.forEach(tag => { %><a href="/list/<%= tag.name %>"><%= tag.name %></a> <% }) %></p>
   <p>Items:</p>
-    <ul>
-    <% items.forEach(item => { %>
-      <li id='<%= item.id %>'><img src="/uploads/<%= item.image %>.avif" alt="<%= item.name %>"><a href="/item/<%= item.name %>"><%= item.name %></a>
-			<button onclick="vote(['<%= item.id %>', '<%= tags.map(tag => tag.id) %>'], 1, 'tag', 'vote-<%= item.id %>' )">↑</button>
-			<button onclick="vote(['<%= item.id %>', '<%= tags.map(tag => tag.id) %>'], 0, 'tag', 'vote-<%= item.id %>' )">↓</button>
-      <span><%= item.upvotes - item.downvotes %></span>
-			<span id="vote-<%= item.id %>"></span></li>
+  <ul>
+    <% results.items.forEach(item => { %>
+      <li id="<%= item.id %>">
+        <img src="/uploads/<%= item.image %>.avif" alt="<%= item.name %>">
+        <a href="/item/<%= item.name %>"><%= item.name %></a>
+        <button onclick='vote(["<%= item.id %>", "<%= results.tags.map(tag => tag.id).join(",") %>"], 1, "tag", "vote-<%= item.id %>")'>↑</button>
+        <button onclick='vote(["<%= item.id %>", "<%= results.tags.map(tag => tag.id).join(",") %>"], 0, "tag", "vote-<%= item.id %>")'>↓</button>
+        <span><%= item.up - item.down %></span>
+        <span id="vote-<%= item.id %>"></span>
+      </li>
     <% }) %>
   </ul>
   <a href="/">search</a>
-
-<script src="/js/vote.js"></script>
+  <script src="/js/vote.js"></script>
 </body>
 </html>
+

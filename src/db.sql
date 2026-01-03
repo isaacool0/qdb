@@ -271,3 +271,28 @@ END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER edit_user_avatar_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.avatar IS DISTINCT FROM NEW.avatar) EXECUTE FUNCTION edit_user_avatar();
 
+CREATE FUNCTION get_rating(up INT, down INT, z FLOAT DEFAULT 1.96)
+RETURNS FLOAT AS $$
+DECLARE
+  n FLOAT := up + down;
+  phat FLOAT := CASE WHEN n = 0 THEN 0 ELSE up / n END;
+BEGIN
+  IF n = 0 THEN
+    RETURN 0;
+  END IF;
+  RETURN (phat + z*z/(2*n) - z * SQRT((phat*(1-phat) + z*z/(4*n)) / n)) / (1 + z*z/n);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE VIEW item_stats AS
+SELECT
+  items.id,
+  items.name,
+  items.image,
+  COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE)::INT AS up,
+  COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS FALSE)::INT AS down
+FROM items
+LEFT JOIN item_tags ON item_tags.item_id = items.id AND item_tags.active = TRUE
+LEFT JOIN tag_votes ON tag_votes.item_id = items.id AND tag_votes.tag_id = item_tags.tag_id
+GROUP BY items.id, items.name, items.image;
+
