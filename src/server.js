@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
 //TODO make frontend show rating as a % for top, or (upvotes-downvotes)/tags for pop
 app.get('/list/:tags{/:mode}', async (req, res) => {
   let tags = req.params.tags ? req.params.tags.split(":") : [];
-  if (!req.params.mode) return res.redirect(302, `/list/${tags.join(":")}/top`);
+  if (!['pop', 'top'].includes(req.params.mode)) return res.redirect(302, `/list/${tags.join(":")}/top`);
   if (!req.params.tags) return res.redirect(302, '/');
   if (tags.length === 0) return res.redirect(302, '/');
   let page = parseInt(req.query.page) || 1;

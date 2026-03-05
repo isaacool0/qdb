@@ -20,11 +20,18 @@
 <body>
   <h1>Search Results</h1>
   <p>Tags: <% results.tags.forEach(tag => { %><a href="/list/<%= tag.name %>"><%= tag.name %></a> <% }) %></p>
+  <input type="text" placeholder="page" id="page"><button onclick="window.location.search=`?page=${document.getElementById('page').value}`">Go</button>
   <p>Items:</p>
   <ul>
     <% results.items.forEach(item => { %>
       <li id="<%= item.id %>">
-        <img src="/uploads/<%= item.image %>.avif" alt="<%= item.name %>">
+        <% if (item.image) { %>
+          <img src="/uploads/<%= item.image %>.avif" alt="<%= item.name %>">
+        <% } else { %>
+          <div style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; border:4px solid #000;">
+          <%= item.name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>        
         <a href="/item/<%= item.name %>"><%= item.name %></a>
         <button onclick='vote(["<%= item.id %>", "<%= results.tags.map(tag => tag.id).join(",") %>"], 1, "tag", "vote-<%= item.id %>")'>↑</button>
         <button onclick='vote(["<%= item.id %>", "<%= results.tags.map(tag => tag.id).join(",") %>"], 0, "tag", "vote-<%= item.id %>")'>↓</button>
