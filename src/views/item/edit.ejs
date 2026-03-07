@@ -61,7 +61,7 @@ async function save() {
   name = document.getElementById('name').textContent;
   desc = document.getElementById('desc').textContent;
   tags = getTags();
-  if (name===ogname&&desc===ogdesc&&checkTags()) {
+  if (name===ogname && desc===ogdesc && checkTags() && !imageEdited) {
     document.getElementById('msg').style.color = '#00F';
     document.getElementById('msg').textContent = 'no edits!';
     return;
@@ -76,16 +76,17 @@ async function save() {
     edit('tags',tags);
   };
   if (imageEdited && newImage) {
-    let image = await upload();
-    if(image) {
-      edit('image',image);
-      imageEdited = false;
-      newImage = null;
-    } else {
+    let image = await upload().catch(() => null);
+    if (!image) {
       document.getElementById('msg').style.color = '#F00';
       document.getElementById('msg').textContent = 'error uploading image';
+      return;
     }
-  };
+    edit('image', image);
+    imageEdited = false;
+    newImage = null;
+  }
+
 };
 
 function edit(type,value) {
@@ -121,10 +122,10 @@ let newImage;
 function editImage() {
   let img = document.getElementById('image')
   if (img.tagName !== 'IMG') {
-    image.replaceWith(image = Object.assign(document.createElement('img'), { id:'image', onclick:editImage }));
+    img.replaceWith(img = Object.assign(document.createElement('img'), { id:'image', onclick:editImage }));
     return editImage();
   }  
-  if(imageEdited) {
+  if (imageEdited && newImage) {
     img.src = '/uploads/<%= image %>.avif';
     imageEdited = false;
     newImage = null;

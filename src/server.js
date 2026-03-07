@@ -154,8 +154,6 @@ async function getResults(tagNames, mode = 'top', dir, page, size) {
   return {tags, items};
 }
 
-
-
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

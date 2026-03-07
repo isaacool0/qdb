@@ -21,7 +21,7 @@ async function loadBlake3() {
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 16777216 //16MB
+    fileSize: 67108864 //64MB
   }
 });
 
