@@ -1,12 +1,12 @@
-function vote(object, rating, type, message) {
+function vote(object, value, type, message) {
 	if (type==='tag'&&object[1].includes(',')) {
   	object[1].split(',').forEach(tag => {
-			 vote([object[0], tag], rating, type, message);
+			 vote([object[0], tag], value, type, message);
 		});
     return;
   };
   let msg = document.getElementById(message);
-  let xvote = rating === 1 ? 'up' : 'down';
+  let xvote = value === 1 ? 'up' : 'down';
   fetch(`/api/vote/${type}`, {
     method: 'POST',
     headers: {
@@ -14,7 +14,7 @@ function vote(object, rating, type, message) {
     },
     body: JSON.stringify({
       object: object,
-      rating: rating
+      vote: value
     })
   })
   .then(r=>r.json())
