@@ -120,6 +120,10 @@ function edit(type,value) {
 let newImage;
 function editImage() {
   let img = document.getElementById('image')
+  if (img.tagName !== 'IMG') {
+    image.replaceWith(image = Object.assign(document.createElement('img'), { id:'image', onclick:editImage }));
+    return editImage();
+  }  
   if(imageEdited) {
     img.src = '/uploads/<%= image %>.avif';
     imageEdited = false;
