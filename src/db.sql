@@ -271,7 +271,7 @@ END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER edit_user_avatar_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.avatar IS DISTINCT FROM NEW.avatar) EXECUTE FUNCTION edit_user_avatar();
 
-CREATE FUNCTION get_rating(up INT, down INT, z FLOAT DEFAULT 1.96)
+CREATE FUNCTION get_rating(up FLOAT, down FLOAT, z FLOAT DEFAULT 1.96)
 RETURNS FLOAT AS $$
 DECLARE
   n FLOAT := up + down;
@@ -284,15 +284,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE VIEW item_stats AS
-SELECT
-  items.id,
-  items.name,
-  items.image,
-  COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS TRUE)::INT AS up,
-  COUNT(tag_votes.*) FILTER (WHERE tag_votes.vote IS FALSE)::INT AS down
-FROM items
-LEFT JOIN item_tags ON item_tags.item_id = items.id AND item_tags.active = TRUE
-LEFT JOIN tag_votes ON tag_votes.item_id = items.id AND tag_votes.tag_id = item_tags.tag_id
-GROUP BY items.id, items.name, items.image;
-
+CREATE FUNCTION item_stats(tag_ids TEXT[])
+RETURNS TABLE(id TEXT, name TEXT, image TEXT, up FLOAT, down FLOAT) AS $$
+  SELECT
+    items.id,
+    items.name,
+    items.image,
+    COALESCE(SUM((tag_votes.vote IS TRUE)::INT), 0) / GREATEST(array_length(tag_ids, 1), 1)::FLOAT AS up,
+    COALESCE(SUM((tag_votes.vote IS FALSE)::INT), 0) / GREATEST(array_length(tag_ids, 1), 1)::FLOAT AS down
+  FROM items
+  LEFT JOIN tag_votes
+    ON tag_votes.item_id = items.id
+   AND tag_votes.tag_id = ANY(tag_ids)
+  GROUP BY items.id, items.name, items.image;
+$$ LANGUAGE sql STABLE;

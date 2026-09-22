@@ -132,6 +132,7 @@ async function getResults(tagNames, mode = 'top', dir, page, size) {
     : `get_rating(item_stats.up, item_stats.down) ${dir}`;
 
   let tags = (await pool.query(`SELECT id, name FROM tags WHERE name = ANY($1)`, [tagNames])).rows;
+  let tagIds = tags.map(t => t.id);
 
   let items = (await pool.query(`
     SELECT
@@ -142,16 +143,16 @@ async function getResults(tagNames, mode = 'top', dir, page, size) {
       item_stats.down,
       get_rating(item_stats.up, item_stats.down) AS rating,
       JSON_AGG(JSON_BUILD_OBJECT('id', tags.id, 'name', tags.name)) AS tags
-    FROM item_stats
-    JOIN item_tags ON item_tags.item_id = item_stats.id
+    FROM item_stats($1)
+    JOIN item_tags ON item_tags.item_id = item_stats.id AND item_tags.active = true
     JOIN tags ON tags.id = item_tags.tag_id
     GROUP BY item_stats.id, item_stats.name, item_stats.image, item_stats.up, item_stats.down
     HAVING COUNT(DISTINCT CASE WHEN tags.id = ANY($1) THEN tags.id END) = $2
     ORDER BY ${order}
     LIMIT $3 OFFSET $4
-  `, [tags.map(t => t.id), tags.length, size, offset])).rows;
+  `, [tagIds, tagIds.length, size, offset])).rows;
 
-  return {tags, items};
+  return { tags, items };
 }
 
 app.listen(port, () => {
