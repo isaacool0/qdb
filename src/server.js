@@ -134,6 +134,10 @@ async function getResults(tagNames, mode = 'top', dir, page, size) {
   let tags = (await pool.query(`SELECT id, name FROM tags WHERE name = ANY($1)`, [tagNames])).rows;
   let tagIds = tags.map(t => t.id);
 
+  if (tagIds.length !== tagNames.length) {
+    return { tags, items: [] };
+  }
+
   let items = (await pool.query(`
     SELECT
       item_stats.id,
