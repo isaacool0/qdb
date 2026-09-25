@@ -20,7 +20,7 @@
   "homepage": "https://github.com/isaacool0/qdb#readme",
   "dependencies": {
     "connect-redis": "^9.0.0",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.4.2",
     "ejs": "^3.1.10",
     "express": "^5.2.1",
     "express-session": "^1.18.2",

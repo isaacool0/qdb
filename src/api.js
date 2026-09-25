@@ -170,17 +170,37 @@ router.post('/vote/:type', async (req, res) => {
 	};
 });
 
+//TODO make this transactional (so partial failures dont happen, and there is a definitive error/success state to return)
 async function vote(user, object, type, value) {
-	let vote = value === 1 ? true : false;
+	let rating = value === 1 ? true : false;
 	let result;
 	if (type==='tag') {
+    if (Array.isArray(object[1])) {
+      let item = object[0];
+      let tags = object[1];
+      let votes = (await pool.query(`SELECT tag_id, vote FROM tag_votes WHERE user_id = $1 AND item_id = $2 AND tag_id = ANY($3)`, [user, item, tags])).rows;
+      if (tags.every(tag => {
+        let row = votes.find(r => r.tag_id === tag);
+        return row && row.vote === rating;
+      })) {
+      for (let tag of tags) { await vote(user, [item, tag], 'tag', value); }
+      return { success: true, action: 'remove' };      
+      } else {
+        for (let tag of tags) {
+          let row = votes.find(r => r.tag_id === tag);
+          if (row && row.vote === rating) continue;
+          await vote(user, [item, tag], 'tag', value);
+        }
+        return { success: true, action: 'add' };
+      }
+    }
 		result = await pool.query(`SELECT vote FROM tag_votes WHERE user_id = $1 AND item_id = $2 AND tag_id = $3`, [user, object[0], object[1]]);
 	} else {
 		result = await pool.query(`SELECT vote FROM ${type}_votes WHERE user_id = $1 AND ${type}_id = $2`, [user, object]);
 	}
-	if (result.rows.length===0) return await addVote(user, object, type, vote); //add vote
-	if (result.rows[0].vote===vote) return await delVote(user, object, type); //remove vote
-	if (result.rows[0].vote!=vote) { await delVote(user, object, type); return await addVote(user, object, type, vote)}; //change vote
+	if (result.rows.length===0) return await addVote(user, object, type, rating); //add vote
+	if (result.rows[0].vote===rating) return await delVote(user, object, type); //remove vote
+	if (result.rows[0].vote!=rating) { await delVote(user, object, type); return await addVote(user, object, type, rating)}; //change vote
 	return {success: false};
 };
 
