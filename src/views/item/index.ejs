@@ -37,6 +37,7 @@
         <a href="/list/<%= tag.name %>/top"><%= tag.name %></a>
         <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 1, 'tag', 'vote-<%= tag.id %>')">↑</a>
         <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 0, 'tag', 'vote-<%= tag.id %>')">↓</a>
+        <span><%= tag.up - tag.down %></span>
         <span id="vote-<%= tag.id %>"></span>
       </span>
     <% }) %> - <a href="tags">all</a></span>

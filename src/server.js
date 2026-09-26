@@ -56,13 +56,19 @@ app.get('/item/:item{/:action}', async (req, res) => {
   let image = result.image;
   let action = req.params.action;
   let tags = (await pool.query(
-    `SELECT tags.name, tags.id FROM tags
+    `SELECT
+       tags.id,
+       tags.name,
+       COUNT(*) FILTER (WHERE tag_votes.item_id = items.id AND tag_votes.vote = true) AS up,
+       COUNT(*) FILTER (WHERE tag_votes.item_id = items.id AND tag_votes.vote = false) AS down
+     FROM tags
      JOIN item_tags ON tags.id = item_tags.tag_id
      JOIN items ON items.id = item_tags.item_id
-     WHERE items.name = $1 AND item_tags.active = true`, [name])).rows;
+     LEFT JOIN tag_votes ON tag_votes.tag_id = tags.id AND tag_votes.item_id = items.id
+     WHERE items.name = $1 AND item_tags.active = true
+     GROUP BY tags.id, tags.name`, [name])).rows;
   let votes = await getVotes(id,'item');
   if (!action) return res.render('item/index', {name, id, tags, desc, votes, image});
-  //TODO get tag votes
   if (action === 'tags') return res.render('item/tags', {name, id, tags, desc, image});
   if (!req.user) return res.redirect('/login');
   if (action === 'edit') return res.render('item/edit', {name, id, tags, desc, image});
