@@ -36,6 +36,7 @@ function createUser() {
     if (a.success) {
       document.getElementById('msg').style.color = '#0F0';
       document.getElementById('msg').textContent = 'success!';
+      window.location.href = '/';
     } else if (a.nameExists) {
       document.getElementById('msg').style.color = '#F00';
       document.getElementById('msg').textContent = 'Username taken';
