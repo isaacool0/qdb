@@ -67,6 +67,7 @@ app.get('/item/:item{/:action}', async (req, res) => {
      LEFT JOIN tag_votes ON tag_votes.tag_id = tags.id AND tag_votes.item_id = items.id
      WHERE items.name = $1 AND item_tags.active = true
      GROUP BY tags.id, tags.name`, [name])).rows;
+  tags.sort((a, b) => (b.up - b.down) - (a.up - a.down));
   let votes = await getVotes(id,'item');
   if (!action) return res.render('item/index', {name, id, tags, desc, votes, image});
   if (action === 'tags') return res.render('item/tags', {name, id, tags, desc, image});
