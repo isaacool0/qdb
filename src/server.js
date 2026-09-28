@@ -19,12 +19,12 @@ app.use(express.json());
 
 addSession(app);
 auth(app);
-app.get('/login', (req, res) => {  res.render('login')});
+app.get('/login', (req, res) => {  res.render('pages/login')});
 
 app.use('/api', api);
 
 app.get('/', (req, res) => {
-  res.render('home');
+  res.render('pages/home');
 });
 
 //TODO paginate results on frontend template
@@ -41,7 +41,7 @@ app.get('/list/:tags{/:mode}', async (req, res) => {
   if (results.items.length > 0) {
     res.render('list/index', { results, page, size, dir });
   } else {
-    res.render('list/no-results', { tags });
+    res.render('list/empty', { tags });
   }
 });
 
@@ -69,7 +69,7 @@ app.get('/item/:item{/:action}', async (req, res) => {
      GROUP BY tags.id, tags.name`, [name])).rows;
   tags.sort((a, b) => (b.up - b.down) - (a.up - a.down));
   let votes = await getVotes(id,'item');
-  if (!action) return res.render('item/index', {name, id, tags, desc, votes, image});
+  if (!action) return res.render('item/show', {name, id, tags, desc, votes, image});
   if (action === 'tags') return res.render('item/tags', {name, id, tags, desc, image});
   if (!req.user) return res.redirect('/login');
   if (action === 'edit') return res.render('item/edit', {name, id, tags, desc, image});
@@ -81,7 +81,7 @@ app.get('/user/:user{/:action}', async (req, res) => {
   let action = req.params.action;
   let user = (await pool.query('SELECT id, name, bio FROM users WHERE name = $1', [username])).rows[0];
 	if (!user) return res.render(`user/not-found`, {username});
-	if (!action) return res.render('user/index', {user});
+	if (!action) return res.render('user/show', {user});
   if (action === 'edit') return res.render('user/edit', {user});
   res.redirect(302, `/user/${username}`);
 });
@@ -98,7 +98,7 @@ app.get('/new{/:thing}', (req, res) => {
       res.render('new/user');
       break;
     case undefined:
-      res.render('new');
+      res.render('new/index');
     break;
   default:
     res.redirect(302, '/new');
