@@ -20,6 +20,7 @@
 	</style>
 </head>
 <body>
+<%- include('../partials/header') %>
   <p>New Item</p>
   <input type="file" id="image" onchange="showFileName()" hidden accept="image/jpeg,image/png,image/gif,image/webp,image/avif" >
   <button onclick="document.getElementById('image').click()">Image</button> <span id="filename"></span><br>

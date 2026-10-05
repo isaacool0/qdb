@@ -1,0 +1,19 @@
+<link rel="stylesheet" href="/css/header.css">
+<header class="top">
+  <div class="in">
+    <a class="brand" href="/">QDB</a>
+    <form onsubmit="search('Bar'); return false;">
+      <input type="text" id="searchBar" placeholder="search">
+      <button type="submit">Search</button>
+    </form>
+    <nav>
+      <a href="/new">Create</a>
+      <% if (currentUser) { %>
+        <a href="/user/<%= encodeURIComponent(currentUser.name) %>"><%= currentUser.name %></a>
+      <% } else { %>
+        <a href="/login">Log in</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<script src="/js/search.js"></script>

@@ -6,6 +6,7 @@
   <title><%= user.name %></title>
 </head>
 <body>
+<%- include('../partials/header') %>
   <h1><%= user.name %></h1>
   <span><button onclick="vote('<%= user.id %>', 1, 'user', 'voteText')">upvote</button>/<button onclick="vote('<%= user.id %>', 0, 'user', 'voteText')">downvote</button></span>
 	<p id="voteText"></p>

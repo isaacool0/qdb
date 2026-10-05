@@ -18,6 +18,7 @@
   </style>
 </head>
 <body>
+<%- include('../partials/header') %>
   <h1>Search Results</h1>
   <p>Tags: <% results.tags.forEach(tag => { %><a href="/list/<%= tag.name %>"><%= tag.name %></a> <% }) %></p>
   <input type="text" placeholder="page" id="page"><button onclick="window.location.search=`?page=${document.getElementById('page').value}`">Go</button>

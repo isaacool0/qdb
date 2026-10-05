@@ -19,6 +19,12 @@ app.use(express.json());
 
 addSession(app);
 auth(app);
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user || null;
+  next();
+});
+
 app.get('/login', (req, res) => {  res.render('pages/login')});
 
 app.use('/api', api);

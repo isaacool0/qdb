@@ -6,6 +6,7 @@
   <title><%= user.name %></title>
 </head>
 <body>
+<%- include('../partials/header') %>
   <h1 id="name" contenteditable="true"><%= user.name %></h1>
   <p id="bio" contenteditable="true"><%= user.bio %></p>
   <button onclick="save()">save</button><br>

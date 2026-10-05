@@ -1,0 +1,49 @@
+.top {
+  background: #1f3a5f;
+  margin: -8px -8px 0;
+}
+
+.top .in {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  max-width: 75%;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+.top .brand {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.top form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.top input {
+  min-width: 0;
+  padding: 7px 10px;
+}
+
+.top button {
+  padding: 7px 14px;
+  background: #e9edf3;
+  color: #1c2430;
+  cursor: pointer;
+}
+
+.top nav {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 16px;
+}
+
+.top nav a {
+  color: #dbe4f1;
+  font-size: 14px;
+}

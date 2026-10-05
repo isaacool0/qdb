@@ -6,16 +6,12 @@
   <title>Search</title>
 </head>
 <body>
+<%- include('../partials/header') %>
   <p>Search</p>
-  <input type="text" id="searchBox" placeholder="search">
-  <button onclick="search()">Search</button><br>
+  <form onsubmit="search('Box'); return false;">
+    <input type="text" id="searchBox" placeholder="search">
+    <button type="submit">Search</button>
+  </form>
   <a href="/login">login</a> <a href="/new">create</a>
-<script>
-function search() {
-   let input = document.getElementById("searchBox");
-   let tags = input.value.trim().toLowerCase().replace(/[^a-z0-9\s-]/g,' ').replace(/\s+/g,':')
-   window.location.href = `/list/${tags}/top`;
-}
-</script>
 </body>
 </html>
