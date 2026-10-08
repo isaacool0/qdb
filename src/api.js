@@ -200,7 +200,7 @@ async function vote(user, object, type, value) {
 	}
 	if (result.rows.length===0) return await addVote(user, object, type, rating); //add vote
 	if (result.rows[0].vote===rating) return await delVote(user, object, type); //remove vote
-	if (result.rows[0].vote!=rating) { await delVote(user, object, type); return await addVote(user, object, type, rating)}; //change vote
+	if (result.rows[0].vote!=rating) return await changeVote(user, object, type, rating); //change vote
 	return {success: false};
 };
 
@@ -231,6 +231,20 @@ try {
 		return {success: false};
 	}
 };
+
+async function changeVote(user, object, type, vote) {
+  try {
+    if (type === 'tag') {
+      await pool.query(`UPDATE tag_votes SET vote = $4, created_at = now() WHERE user_id = $1 AND item_id = $2 AND tag_id = $3`, [user, object[0], object[1], vote]);
+    } else {
+      await pool.query(`UPDATE ${type}_votes SET vote = $3, created_at = now() WHERE user_id = $1 AND ${type}_id = $2`, [user, object, vote]);
+    }
+    return {success: true, action: 'change'};
+  } catch (e) {
+    console.error(e);
+    return {success: false};
+  }
+}
 
 async function redirect(name,type) {
   let result = await pool.query('SELECT to_name FROM redirects WHERE from_name = $1 AND redirect_type = $2', [name, type])

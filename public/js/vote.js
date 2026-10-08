@@ -16,6 +16,7 @@ function vote(object, value, type, message) {
     if (a.success) {
       switch (a.action) {
       case 'add':
+      case 'change':
         msg.style.color = '#0F0';
         msg.textContent = `${xvote}voted`;
         break;
