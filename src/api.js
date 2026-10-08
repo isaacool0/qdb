@@ -164,6 +164,7 @@ router.post('/vote/:type', async (req, res) => {
 	if (!['item','tag','comment','profile'].includes (req.params.type)) return res.sendStatus(400);
 	let result = await vote(req.user.id, req.body.object, req.params.type, req.body.vote);
 	if (result.success===true) {
+		result.rating = await getRating(req.params.type, req.body.object);
 		res.json(result);
 	} else {
 		res.status(500).json({success: false});
@@ -244,6 +245,42 @@ async function changeVote(user, object, type, vote) {
     console.error(e);
     return {success: false};
   }
+}
+
+async function getRating(type, object) {
+  let r;
+  if (type === 'tag' && Array.isArray(object[1])) {
+    r = await pool.query(`
+      SELECT up, down, get_rating(up, down) AS rating
+      FROM (
+        SELECT
+          COALESCE(SUM(vote::int), 0)::float / $3::float AS up,
+          COALESCE(SUM((NOT vote)::int), 0)::float / $3::float AS down
+        FROM tag_votes
+        WHERE item_id = $1 AND tag_id = ANY($2)
+      ) s`, [object[0], object[1], object[1].length]);
+  } else if (type === 'tag') {
+    r = await pool.query(`
+      SELECT up, down, get_rating(up, down) AS rating
+      FROM (
+        SELECT
+          COUNT(*) FILTER (WHERE vote)::float AS up,
+          COUNT(*) FILTER (WHERE NOT vote)::float AS down
+        FROM tag_votes
+        WHERE item_id = $1 AND tag_id = $2
+      ) s`, [object[0], object[1]]);
+  } else {
+    r = await pool.query(`
+      SELECT up, down, get_rating(up, down) AS rating
+      FROM (
+        SELECT
+          COUNT(*) FILTER (WHERE vote)::float AS up,
+          COUNT(*) FILTER (WHERE NOT vote)::float AS down
+        FROM ${type}_votes
+        WHERE ${type}_id = $1
+      ) s`, [object]);
+  }
+  return r.rows[0];
 }
 
 async function redirect(name,type) {
