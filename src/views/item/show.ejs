@@ -29,15 +29,15 @@
     <% } %>
     <span><%= name %></span>
   </h1>
-  <span><button onclick="vote('<%= id %>', 1, 'item', 'voteText', 'voteCount')">upvote</button>/<button onclick="vote('<%= id %>', 0, 'item', 'voteText', 'voteCount')">downvote</button></span>
-  <span id = "voteCount"><%= votes.upvotes - votes.downvotes %></span>
-	<p id="voteText"></p>
+  <span><button onclick="vote('<%= id %>', 1, 'item', 'item')">upvote</button>/<button onclick="vote('<%= id %>', 0, 'item', 'item')">downvote</button></span>
+  <span id = "count-item"><%= votes.upvotes - votes.downvotes %></span>
+	<p id="vote-item"></p>
   <span class="tags">
     <% tags.forEach(tag => { %>
       <span id='<%= tag.id %>' class="tag">
         <a href="/list/<%= tag.name %>/top"><%= tag.name %></a>
-        <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 1, 'tag', 'vote-<%= tag.id %>', 'count-<%= tag.id %>')">↑</a>
-        <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 0, 'tag', 'vote-<%= tag.id %>', 'count-<%= tag.id %>')">↓</a>
+        <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 1, 'tag', '<%= tag.id %>')">↑</a>
+        <a href="javascript:void(0);" onclick="vote(['<%= id %>', '<%= tag.id %>'], 0, 'tag', '<%= tag.id %>')">↓</a>
         <span id="count-<%= tag.id %>"><%= tag.up - tag.down %></span>
         <span id="vote-<%= tag.id %>"></span>
       </span>

@@ -34,8 +34,8 @@
           </div>
         <% } %>        
         <a href="/item/<%= item.name %>"><%= item.name %></a>
-        <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 1, "tag", "vote-<%= item.id %>", "count-<%= item.id %>")'>↑</button>
-        <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 0, "tag", "vote-<%= item.id %>", "count-<%= item.id %>")'>↓</button>
+        <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 1, "tag", "<%= item.id %>"'>↑</button>
+        <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 0, "tag", "<%= item.id %>")'>↓</button>
         <span id="count-<%= item.id %>"><%= item.up - item.down %></span>
         <span id="vote-<%= item.id %>"></span>
       </li>

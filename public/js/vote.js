@@ -1,6 +1,6 @@
-function vote(object, value, type, message, score) {
-  let msg = document.getElementById(message);
-  let count = document.getElementById(score);
+function vote(object, value, type, id) {
+  let msg = document.getElementById(`vote-${id}`);
+  let count = document.getElementById(`count-${id}`);
   let xvote = value === 1 ? 'up' : 'down';
   fetch(`/api/vote/${type}`, {
     method: 'POST',
