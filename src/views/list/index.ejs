@@ -4,45 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Search Results</title>
-  <style>
-    li {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    img {
-      width: 32px;
-      height: 32px;
-      object-fit: cover;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/list.css">
 </head>
 <body>
 <%- include('../partials/header') %>
+<main class="list">
   <h1>Search Results</h1>
-  <p>Tags: <% results.tags.forEach(tag => { %><a href="/list/<%= tag.name %>"><%= tag.name %></a> <% }) %></p>
-  <input type="text" placeholder="page" id="page"><button onclick="window.location.search=`?page=${document.getElementById('page').value}`">Go</button>
-  <p>Items:</p>
-  <ul>
-    <% results.items.forEach(item => { %>
-      <li id="<%= item.id %>">
-        <% if (item.image) { %>
-          <img src="/uploads/<%= item.image %>.avif" alt="<%= item.name %>">
-        <% } else { %>
-          <div style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; border:4px solid #000;">
-          <%= item.name.charAt(0).toUpperCase() %>
-          </div>
-        <% } %>        
-        <a href="/item/<%= item.name %>"><%= item.name %></a>
-        <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 1, "tag", "<%= item.id %>")'>↑</button>
-        <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 0, "tag", "<%= item.id %>")'>↓</button>
-        <span id="count-<%= item.id %>"><%= Math.round(item.up - item.down) %></span>
-        <span id="vote-<%= item.id %>"></span>
-      </li>
-    <% }) %>
-  </ul>
-  <a href="/">search</a>
-  <script src="/js/vote.js"></script>
+  <p class="tags">
+    <% results.tags.forEach(tag => { %><a href="/list/<%= tag.name %>"><%= tag.name %></a><% }) %>
+  </p>
+  <table>
+    <thead>
+      <tr><th>Rank</th><th>Item</th><th>Votes</th></tr>
+    </thead>
+    <tbody>
+      <% results.items.forEach((item, i) => { %>
+        <tr class="votable">
+          <td class="rank"><%= (page - 1) * size + i + 1 %></td>
+          <td>
+            <a class="item" href="/item/<%= item.name %>">
+              <% if (item.image) { %>
+                <img src="/uploads/<%= item.image %>.avif" alt="">
+              <% } else { %>
+                <span class="thumb"><%= item.name.charAt(0).toUpperCase() %></span>
+              <% } %>
+              <%= item.name %>
+            </a>
+          </td>
+          <td>
+            <span class="vote-msg" id="vote-<%= item.id %>"></span>
+            <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 1, "tag", "<%= item.id %>")'>▲</button>
+            <span class="vote-score" id="count-<%= item.id %>"><%= Math.round(item.up - item.down) %></span>
+            <button onclick='vote(["<%= item.id %>", [<%- results.tags.map(tag => `"${tag.id}"`).join(",") %>]], 0, "tag", "<%= item.id %>")'>▼</button>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <p class="pager">
+    <% if (page > 1) { %><a href="?page=<%= page - 1 %>">Previous</a><% } %>
+    Page <%= page %>
+    <% if (results.items.length === size) { %><a href="?page=<%= page + 1 %>">Next</a><% } %>
+  </p>
+</main>
+<script src="/js/vote.js"></script>
 </body>
 </html>
+
 

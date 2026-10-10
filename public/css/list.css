@@ -1,0 +1,118 @@
+body {
+  background: #f6f7f9;
+}
+
+.list {
+  max-width: 75%;
+  margin: 0 auto;
+  padding-top: 20px;
+}
+
+.list h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.list .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+}
+
+.list .tags a {
+  padding: 2px 8px;
+  border: 1px solid #d3d8df;
+  background: #e9edf3;
+  color: #1c2430;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.list table {
+  width: 100%;
+  border: 1px solid #d3d8df;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.list th {
+  padding: 8px;
+  border-bottom: 2px solid #d3d8df;
+  color: #5d6877;
+  font-size: 16px;
+  text-align: left;
+}
+
+.list td {
+  padding: 8px;
+  border-bottom: 1px solid #d3d8df;
+}
+
+.list tbody tr:hover {
+  background: #f0f3f7;
+}
+
+.list th:last-child,
+.list td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.list .rank {
+  width: 64px;
+  color: #5d6877;
+  text-align: right;
+}
+
+.list .item {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.list .item:hover {
+  text-decoration: underline;
+}
+
+.list .item img,
+.list .thumb {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+}
+
+.list .thumb {
+  display: grid;
+  place-items: center;
+  border: 1px solid #d3d8df;
+  font-weight: 900;
+}
+
+.list button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d3d8df;
+  cursor: pointer;
+}
+
+.list button:hover {
+  background: #d9dde3;
+}
+
+.list button:active {
+  background: #b9bdc3;
+}
+
+.list .vote-score {
+  display: inline-block;
+  min-width: 32px;
+  text-align: center;
+}
+
+.list .vote-msg {
+  font-size: 16px;
+}
+
