@@ -14,7 +14,7 @@
 			<li id='<%= tag.id %>'><a href="/list/<%= tag.name %>/top"><%= tag.name %></a>
 			<button onclick="vote(['<%= id %>', '<%= tag.id %>'], 1, 'tag', '<%= tag.id %>')">↑</button>
 			<button onclick="vote(['<%= id %>', '<%= tag.id %>'], 0, 'tag', '<%= tag.id %>')">↓</button>
-			<span id="count-<%= tag.id %>"><%= tag.up - tag.down %></span>
+			<span id="count-<%= tag.id %>"><%= Math.round(tag.up - tag.down) %></span>
 			<span id="vote-<%= tag.id %>"></span></li>
 	  <% }) %>
 	</ul>

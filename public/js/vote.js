@@ -15,7 +15,7 @@ function vote(object, value, type, id) {
   .then(r=>r.json())
   .then(a=>{
     if (a.success) {
-      count.textContent = a.rating.up - a.rating.down;
+      count.textContent = Math.round(a.rating.up - a.rating.down);
       switch (a.action) {
       case 'add':
       case 'change':
