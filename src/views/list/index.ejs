@@ -15,7 +15,7 @@
   </p>
   <table>
     <thead>
-      <tr><th>Rank</th><th>Item</th><th>Votes</th></tr>
+      <tr><th>Rank</th><th>Item</th><th>Raing</th><th>Votes</th></tr>
     </thead>
     <tbody>
       <% results.items.forEach((item, i) => { %>
@@ -30,6 +30,9 @@
               <% } %>
               <%= item.name %>
             </a>
+          </td>
+          <td>
+            <span><%= (item.rating * 100).toFixed(1) + '%'; %></span>
           </td>
           <td>
             <span class="vote-msg" id="vote-<%= item.id %>"></span>
