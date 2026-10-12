@@ -1,6 +1,7 @@
 function vote(object, value, type, id) {
   let msg = document.getElementById(`vote-${id}`);
   let count = document.getElementById(`count-${id}`);
+  let rating = document.getElementById(`rating-${id}`)
   let xvote = value === 1 ? 'up' : 'down';
   fetch(`/api/vote/${type}`, {
     method: 'POST',
@@ -16,6 +17,7 @@ function vote(object, value, type, id) {
   .then(a=>{
     if (a.success) {
       count.textContent = Math.round(a.rating.up - a.rating.down);
+      rating.textContent = (a.rating.rating * 100).toFixed(1) + '%';
       switch (a.action) {
       case 'add':
       case 'change':
