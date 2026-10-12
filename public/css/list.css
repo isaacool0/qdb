@@ -55,14 +55,33 @@ body {
 
 .list th:last-child,
 .list td:last-child {
+  position: relative;
   text-align: right;
   white-space: nowrap;
+}
+
+.list .rating {
+  text-align: right;
+}
+
+.list th:nth-child(1),
+.list td:nth-child(1) {
+  text-align: center;
+}
+
+.list th:nth-child(2),
+.list td:nth-child(2) {
+  width: 75%;
+}
+
+.list th:nth-child(3),
+.list td:nth-child(3) {
+  text-align: right;
 }
 
 .list .rank {
   width: 64px;
   color: #5d6877;
-  text-align: right;
 }
 
 .list .item {
@@ -113,6 +132,10 @@ body {
 }
 
 .list .vote-msg {
+  display: inline-block;
+  width: 140px;
+  text-align: right;
   font-size: 16px;
+  white-space: nowrap;
+  vertical-align: middle;
 }
-
