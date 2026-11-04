@@ -29,28 +29,29 @@ passport.deserializeUser(async (id, done) => {
 	}
 });
 
-const getAccount = async (externalId, provider) => {
-  const result = await pool.query(
-    `SELECT users.id, users.name, connections.external_id
+let getAccount = async (externalId, provider) => {
+  let result = await pool.query(
+    `SELECT users.id, users.username, connections.external_id
     FROM connections
     JOIN users ON users.id = connections.user_id
     WHERE connections.provider = $1 AND connections.external_id = $2`, [provider, externalId]);
   if (result.rows.length > 0) {
-		return { id: result.rows[0].id, externalId: result.rows[0].external_id, name: result.rows[0].name };
+		return { id: result.rows[0].id, externalId: result.rows[0].external_id, username: result.rows[0].username };
   }
   return null;
 };
 
-const addAccount = async (name, externalId, provider) => {
-  const userResult = await pool.query('INSERT INTO users (name) VALUES ($1) RETURNING id', [name]);
-  const userId = userResult.rows[0].id;
+let addAccount = async (name, externalId, provider) => {
+  let username = name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+  let userResult = await pool.query('INSERT INTO users (username) VALUES ($1) RETURNING id', [username]);
+  let userId = userResult.rows[0].id;
   await pool.query('INSERT INTO connections (user_id, provider, external_id, name) VALUES ($1, $2, $3, $4)', [userId, provider, externalId, name]);
-  return { id: userId, externalId, name };
+  return { id: userId, externalId, username };
 };
 
-const addSession = (app) => {
-  const RedisStore = connectRedis.RedisStore;
-  const redisStore = new RedisStore({
+let addSession = (app) => {
+  let RedisStore = connectRedis.RedisStore;
+  let redisStore = new RedisStore({
     client: redisClient,
     prefix: "qdb:",
     ttl: 24*60*60
@@ -70,33 +71,42 @@ const addSession = (app) => {
   app.use(passport.session());
 };
 
-const auth = (app) => {
+let auth = (app) => {
   require('./discord')(app);
 
   app.post('/auth/register', async (req, res) => {
-    let { name, pass } = req.body;
-    if (!name || !pass) return res.status(400).json({ success: false, error: 'missing info' });
+    let { username, pass } = req.body;
+    if (!username || !pass) return res.status(400).json({ success: false, error: 'missing info' });
+    username = username.toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid username' 
+      });
+    }
     try {
-    let hashed = await argon2.hash(pass, { type: argon2.argon2id });
-      let result = await pool.query('INSERT INTO users (name, pass) VALUES ($1, $2) RETURNING id, name', [name, hashed]);
+      let hashed = await argon2.hash(pass, { type: argon2.argon2id });
+      let result = await pool.query('INSERT INTO users (username, pass) VALUES ($1, $2) RETURNING id, username', [username, hashed]);
       let user = result.rows[0];
       req.login(user, (err) => {
         if (err) return res.status(500).json({ error: 'Login failed' });
-        return res.status(201).json({ success: true, id: user.id, name: user.name });
+        return res.status(201).json({ success: true, id: user.id, username: user.username });
       });
     } catch (err) {
       if (err.code === '23505') {
-        return res.status(400).json({success: false, nameExists: true});
+        return res.status(400).json({ success: false, nameExists: true });
       }
       console.error(err);
+      return res.status(500).json({ success: false });
     }
   });
 
   app.post('/auth/login', async (req, res) => {
-    const { name, pass } = req.body;
-    if (!name || !pass) return res.status(400).json({ error: 'missing info' });
+    let { username, pass } = req.body;
+    if (!username || !pass) return res.status(400).json({ error: 'missing info' });
+    username = username.toLowerCase();
     try {
-      let result = await pool.query('SELECT * FROM users WHERE name = $1', [name]);
+      let result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
       if (!result.rows.length) {
         return res.status(401).json({ error: 'Invalid username or password' });
       }
@@ -107,7 +117,7 @@ const auth = (app) => {
       }
       req.login(user, (err) => {
         if (err) return res.status(500).json({ error: 'Login failed' });
-        return res.json({ id: user.id, name: user.name });
+        return res.json({ id: user.id, username: user.username });
       });
     } catch (err) {
       console.error(err);
@@ -116,11 +126,11 @@ const auth = (app) => {
   });
 
 	app.get('/auth/:provider', (req, res, next) => {
-    const provider = req.params.provider;
+    let provider = req.params.provider;
     passport.authenticate(provider)(req, res, next);
   });
   app.get('/auth/:provider/callback', (req, res, next) => {
-    const provider = req.params.provider;
+    let provider = req.params.provider;
     passport.authenticate(provider, { failureRedirect: '/' }, (err, user) => {
       if (err || !user) {
         return res.redirect('/');

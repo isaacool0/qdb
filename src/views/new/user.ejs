@@ -11,13 +11,13 @@
   <p>Register</p>
   <a href="/auth/discord">discord</a><br>
   <p>or:</p>
-  <input type="text" id="name" placeholder="name"><br>
+  <input type="text" id="username" placeholder="username"><br>
   <input type="password" id="pass" placeholder="password"><br>
   <button onclick="createUser();">Create</button>
   <p id="msg"></p>
 <script>
 function createUser() {
-  let name = document.getElementById('name').value;
+  let username = document.getElementById('username').value;
   let pass = document.getElementById('pass').value;
   fetch('/auth/register', {
     method: 'POST',
@@ -27,7 +27,7 @@ function createUser() {
     credentials: 'include',
     body: JSON.stringify(
       {
-        name: name, 
+        username: username, 
         pass: pass,
       }    
     ),

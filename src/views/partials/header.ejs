@@ -9,7 +9,7 @@
     <nav>
       <a href="/new">Create</a>
       <% if (currentUser) { %>
-        <a href="/user/<%= encodeURIComponent(currentUser.name) %>"><%= currentUser.name %></a>
+        <a href="/user/<%= encodeURIComponent(currentUser.username) %>"><%= currentUser.username %></a>
       <% } else { %>
         <a href="/login">Log in</a>
       <% } %>

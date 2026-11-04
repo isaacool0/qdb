@@ -116,7 +116,7 @@ router.post('/edit/:thing{/:type}', async (req, res) => {
   case 'user':
     switch (req.params.type) {
     case 'name':
-      res.json(await editString('users', 'name', user, slugify(req.body.name), user));
+      res.json(await editString('users', 'username', user, slugify(req.body.name), user));
       break;
     case 'bio':
       res.json(await editString('users', 'bio', user, req.body.bio, user));
@@ -131,7 +131,7 @@ router.post('/edit/:thing{/:type}', async (req, res) => {
 
 async function editString(table, type, id, value, user) {
 	if (!['items','users'].includes (table)) return {success: false};;
-	if (!['name','description','image','bio','avatar'].includes (type)) return {success: false};;
+	if (!['name','username','nickname','description','image','bio','avatar'].includes (type)) return {success: false};;
   try {
     if(table=='users') {
       await pool.query(`UPDATE ${table} SET ${type} = $2 WHERE id = $1`, [user, value]);

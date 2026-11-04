@@ -85,7 +85,7 @@ app.get('/item/:item{/:action}', async (req, res) => {
 app.get('/user/:user{/:action}', async (req, res) => {
   let username = req.params.user;
   let action = req.params.action;
-  let user = (await pool.query('SELECT id, name, bio FROM users WHERE name = $1', [username])).rows[0];
+  let user = (await pool.query('SELECT id, username, nickname, bio FROM users WHERE username = $1', [username])).rows[0];
 	if (!user) return res.render(`user/not-found`, {username});
 	if (!action) return res.render('user/show', {user});
   if (action === 'edit') return res.render('user/edit', {user});

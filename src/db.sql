@@ -1,4 +1,3 @@
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 CREATE FUNCTION b64url(b64 TEXT) RETURNS TEXT AS $$
@@ -14,16 +13,19 @@ CREATE TABLE public.images (
 
 CREATE TABLE public.users (
   id TEXT DEFAULT b64url(encode(public.gen_random_bytes(8), 'base64')) NOT NULL UNIQUE,
-  name TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
+  nickname TEXT,
   bio TEXT,
   avatar TEXT,
   pass TEXT,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  CONSTRAINT users_username_check CHECK (username = LOWER(username) AND username ~ '^[a-z0-9_]{3,20}$'),
   CONSTRAINT users_avatar_fkey FOREIGN KEY (avatar) REFERENCES public.images(id) ON DELETE SET NULL
 );
 
 CREATE INDEX users_id_idx ON public.users(id);
+CREATE UNIQUE INDEX users_username_idx ON public.users(username);
 
 CREATE TABLE public.connections (
   user_id TEXT NOT NULL,
@@ -233,7 +235,7 @@ CREATE TRIGGER edit_item_image_trigger AFTER UPDATE ON public.items FOR EACH ROW
 CREATE FUNCTION create_user_edits() RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-  VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.name, now());
+  VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.username, now());
   IF NEW.bio IS NOT NULL THEN
     INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
     VALUES (gen_edit_id(NEW.id, 'BIO'), NEW.id, NEW.id, 'BIO', NEW.bio, now());
@@ -243,14 +245,14 @@ END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER create_user_edits_trigger AFTER INSERT ON public.users FOR EACH ROW EXECUTE FUNCTION create_user_edits();
 
-CREATE FUNCTION edit_user_name() RETURNS TRIGGER AS $$
+CREATE FUNCTION edit_user_username() RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-  VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.name, now());
+  VALUES (gen_edit_id(NEW.id, 'USR'), NEW.id, NEW.id, 'USR', NEW.username, now());
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-CREATE TRIGGER edit_user_name_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.name IS DISTINCT FROM NEW.name) EXECUTE FUNCTION edit_user_name();
+CREATE TRIGGER edit_user_username_trigger AFTER UPDATE ON public.users FOR EACH ROW WHEN (OLD.username IS DISTINCT FROM NEW.username) EXECUTE FUNCTION edit_user_username();
 
 CREATE FUNCTION edit_user_bio() RETURNS TRIGGER AS $$
 BEGIN
@@ -264,7 +266,7 @@ CREATE TRIGGER edit_user_bio_trigger AFTER UPDATE ON public.users FOR EACH ROW W
 CREATE FUNCTION edit_user_avatar() RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.edits (id, object_id, user_id, edit_type, content, created_at)
-  VALUES (gen_edit_id(NEW.id, 'PFP'), NEW.id, NEW.updated_by, 'PFP', NEW.avatar, now());
+  VALUES (gen_edit_id(NEW.id, 'PFP'), NEW.id, NEW.id, 'PFP', NEW.avatar, now());
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

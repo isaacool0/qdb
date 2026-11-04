@@ -11,7 +11,7 @@
   <span><button onclick="vote('<%= user.id %>', 1, 'user', 'voteText')">upvote</button>/<button onclick="vote('<%= user.id %>', 0, 'user', 'voteText')">downvote</button></span>
 	<p id="voteText"></p>
 	<p><%= user.bio %></p>
-	<a href="/user/<%= user.name %>/edit">edit</a><br>
+	<a href="/user/<%= user.username %>/edit">edit</a><br>
 	<a href="/">home</a><br>
 <script src="/js/vote.js"></script>
 </body>
