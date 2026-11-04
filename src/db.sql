@@ -18,7 +18,6 @@ CREATE TABLE public.users (
   bio TEXT,
   avatar TEXT,
   pass TEXT,
-  salt TEXT,
   created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT users_avatar_fkey FOREIGN KEY (avatar) REFERENCES public.images(id) ON DELETE SET NULL
