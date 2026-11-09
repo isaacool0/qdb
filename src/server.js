@@ -112,10 +112,6 @@ app.get('/new{/:thing}', (req, res) => {
   }
 });
 
-app.get('/get-votes/:object/:type', async (req, res) => {
-  getVotes(req.params.object, req.params.type);
-});
-
 //TODO sanitize type
 async function getVotes(object, type) {
 	let votes;
