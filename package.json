@@ -19,18 +19,20 @@
   },
   "homepage": "https://github.com/isaacool0/qdb#readme",
   "dependencies": {
+    "argon2": "^0.45.2",
     "connect-redis": "^9.0.0",
     "dotenv": "^17.4.2",
-    "ejs": "^3.1.10",
+    "ejs": "^7.0.2",
     "express": "^5.2.1",
     "express-session": "^1.18.2",
     "hash-wasm": "^4.12.0",
+    "jake": "^13.0.3",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
     "pg": "^8.16.3",
     "redis": "^5.10.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "slugify": "^1.6.6"
   }
 }
