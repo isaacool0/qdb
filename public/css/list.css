@@ -1,9 +1,79 @@
+@media (orientation: landscape) {
+  .list {
+    max-width: 75%;
+  }
+  .list table {
+    table-layout: auto;
+  }
+  .list th,
+  .list td {
+    padding: 8px;
+    word-break: normal;
+  }
+  .list th:nth-child(1),
+  .list td:nth-child(1) {
+    width: auto;
+    text-align: center;
+  }
+  .list th:nth-child(2),
+  .list td:nth-child(2) {
+    width: 75%;
+  }
+  .list th:nth-child(3),
+  .list td:nth-child(3) {
+    width: auto;
+    text-align: right;
+  }
+  .list th:nth-child(4),
+  .list td:nth-child(4) {
+    width: auto;
+    white-space: nowrap;
+  }
+  .list .vote-msg {
+    display: inline-block;
+    width: 140px;
+  }
+}
+
+@media (orientation: portrait) {
+  .list {
+    max-width: 95%;
+  }
+  .list table {
+    table-layout: fixed;
+  }
+  .list th,
+  .list td {
+    padding: 6px;
+    word-break: break-word;
+  }
+  .list th:nth-child(1),
+  .list td:nth-child(1) {
+    width: 44px;
+  }
+  .list th:nth-child(2),
+  .list td:nth-child(2) {
+    width: auto;
+  }
+  .list th:nth-child(3),
+  .list td:nth-child(3) {
+    width: 62px;
+  }
+  .list th:nth-child(4),
+  .list td:nth-child(4) {
+    width: 112px;
+    white-space: normal;
+  }
+  .list .vote-msg {
+    display: none;
+  }
+}
+
 body {
   background: #f6f7f9;
 }
 
 .list {
-  max-width: 75%;
   margin: 0 auto;
   padding-top: 20px;
 }
@@ -37,15 +107,13 @@ body {
 }
 
 .list th {
-  padding: 8px;
+  font-size: 16px;
   border-bottom: 2px solid #d3d8df;
   color: #5d6877;
-  font-size: 16px;
   text-align: left;
 }
 
 .list td {
-  padding: 8px;
   border-bottom: 1px solid #d3d8df;
 }
 
@@ -69,26 +137,20 @@ body {
   text-align: center;
 }
 
-.list th:nth-child(2),
-.list td:nth-child(2) {
-  width: 75%;
-}
-
 .list th:nth-child(3),
 .list td:nth-child(3) {
   text-align: right;
 }
 
 .list .rank {
-  width: 64px;
   color: #5d6877;
 }
 
 .list .item {
-  display: grid;
   grid-template-columns: 32px 1fr;
+  gap: 8px;
+  display: grid;
   align-items: center;
-  gap: 12px;
   text-decoration: none;
 }
 
@@ -126,16 +188,12 @@ body {
 }
 
 .list .vote-score {
-  display: inline-block;
   min-width: 32px;
+  display: inline-block;
   text-align: center;
 }
 
 .list .vote-msg {
-  display: inline-block;
-  width: 140px;
   text-align: right;
-  font-size: 16px;
-  white-space: nowrap;
   vertical-align: middle;
 }

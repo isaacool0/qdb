@@ -1,3 +1,29 @@
+@media (orientation: landscape) {
+  .top .in {
+    grid-template-columns: auto 1fr auto;
+    max-width: 75%;
+  }
+}
+
+@media (orientation: portrait) {
+  .top .in {
+    grid-template-columns: 1fr auto;
+    max-width: 95%;
+  }
+  .top .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .top nav {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .top form {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
 .top {
   background: #1f3a5f;
   margin: -8px -8px 0;
@@ -5,10 +31,8 @@
 
 .top .in {
   display: grid;
-  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  max-width: 75%;
   margin: 0 auto;
   padding: 8px 16px;
 }
