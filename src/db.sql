@@ -146,6 +146,19 @@ CREATE TABLE public.profile_votes (
 CREATE INDEX profile_votes_user_id_idx ON public.profile_votes(user_id);
 CREATE INDEX profile_votes_profile_id_idx ON public.profile_votes(profile_id);
 
+CREATE TABLE public.views (
+  object_id TEXT NOT NULL,
+  edit_type CHAR(3) NOT NULL,
+  viewer TEXT, -- NOT NULL, -- will be used once anonymous users are tracked
+  user_id TEXT, 
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT views_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX views_object_idx ON public.views(object_id, created_at);
+CREATE INDEX views_viewer_idx ON public.views(viewer);
+CREATE INDEX views_user_id_idx ON public.views(user_id);
+
 CREATE TABLE public.redirects (
   from_name TEXT NOT NULL,
   to_name TEXT NOT NULL,
